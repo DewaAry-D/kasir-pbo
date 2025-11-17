@@ -1,9 +1,6 @@
 package kokiui;
 
-
 import amodels.Order;
-
-
 
 public class listpesanan1 extends javax.swing.JPanel {
     
@@ -16,6 +13,12 @@ public class listpesanan1 extends javax.swing.JPanel {
         jButton1.setText(order.getOrderNumber());
         
         setMaximumSize(getPreferredSize());
+    }
+    
+    public void addMouseClickListener(java.awt.event.MouseAdapter listener){
+        this.addMouseListener(listener);
+        
+        jButton1.addMouseListener(listener);
     }
 
     /**

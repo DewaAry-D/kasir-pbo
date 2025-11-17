@@ -5,7 +5,7 @@
 package loginui;
 
 import kasirui.Kasir1;
-import kokiui.koki;
+import kokiui.kokifix;
 import ownerui.Owner;
 
 /**
@@ -168,7 +168,7 @@ public class login extends javax.swing.JFrame {
             this.dispose();
         }
         else if(jTextField1.getText().equals(username2)&& jTextField2.getText().equals(pw2)){
-            koki Koki = new koki();
+            kokifix Koki = new kokifix();
             Koki.setVisible(true);
             this.dispose();
         } 

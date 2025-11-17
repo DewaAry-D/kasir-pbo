@@ -1,4 +1,4 @@
-# Created at 2025-11-12T21:40:44.149
+# Created at 2025-11-17T18:44:28.341
 org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
 	at org.junit.platform.launcher.core.EngineDiscoveryOrchestrator.discoverEngineRoot(EngineDiscoveryOrchestrator.java:160)
 	at org.junit.platform.launcher.core.EngineDiscoveryOrchestrator.discoverSafely(EngineDiscoveryOrchestrator.java:132)
