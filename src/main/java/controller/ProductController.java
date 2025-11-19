@@ -51,4 +51,21 @@ public class ProductController {
         }
         return listProduk;
     }
+    
+    public boolean hapusProduk (int idProduk) {
+        String sql = "UPDATE products SET is_active = 0 WHERE id = ?";
+        
+        try (Connection conn = db.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, idProduk);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

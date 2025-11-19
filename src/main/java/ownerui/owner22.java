@@ -24,7 +24,7 @@ public class owner22 extends javax.swing.JFrame {
         try {
             conn = db.getConnection();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Gagal terhubung ke database!", e);
         }
         
         loadJumlahProduk();
@@ -71,7 +71,7 @@ public class owner22 extends javax.swing.JFrame {
         columnModel.getColumn(2).setCellRenderer(centerRenderer);
 
         // Kolom Nama Produk
-        columnModel.getColumn(3).setPreferredWidth(280); 
+        columnModel.getColumn(3).setPreferredWidth(250); 
         columnModel.getColumn(3).setMinWidth(200); 
         columnModel.getColumn(3).setCellRenderer(toolTip);
 
@@ -80,7 +80,8 @@ public class owner22 extends javax.swing.JFrame {
         columnModel.getColumn(4).setCellRenderer(centerRenderer);
 
         // Kolom Dibayar
-        columnModel.getColumn(5).setPreferredWidth(120);
+        columnModel.getColumn(5).setPreferredWidth(150);
+        columnModel.getColumn(5).setCellRenderer(toolTip);
     }
     
     private void loadJumlahProduk() {
@@ -98,7 +99,7 @@ public class owner22 extends javax.swing.JFrame {
             rs.close();
             ps.close();
         } catch (Exception e) {
-            logger.log(java.util.logging.Level.SEVERE, null, e);
+            logger.log(java.util.logging.Level.SEVERE, "Gagal load jumlah produk!", e);
         }
     }
     
@@ -118,7 +119,7 @@ public class owner22 extends javax.swing.JFrame {
             ps.close();
 
         } catch (Exception e) {
-            logger.log(java.util.logging.Level.SEVERE, null, e);
+            logger.log(java.util.logging.Level.SEVERE, "Gagal load total transaksi!", e);
         }
     }
     
@@ -140,7 +141,7 @@ public class owner22 extends javax.swing.JFrame {
             ps.close();
 
         } catch (Exception e) {
-            logger.log(java.util.logging.Level.SEVERE, null, e);
+            logger.log(java.util.logging.Level.SEVERE, "Gagal load total Pendapatan!", e);
         }
     }
 
@@ -193,7 +194,7 @@ public class owner22 extends javax.swing.JFrame {
             ps.close();
 
         } catch (Exception e) {
-            logger.log(java.util.logging.Level.SEVERE, null, e);
+            logger.log(java.util.logging.Level.SEVERE, "Gagal load riwayat transaksi!", e);
         }
     }
 
@@ -249,6 +250,7 @@ public class owner22 extends javax.swing.JFrame {
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
         jPanel2.setBackground(new java.awt.Color(250, 165, 51));
+        jPanel2.setPreferredSize(new java.awt.Dimension(300, 58));
 
         jLabel1.setIcon(new javax.swing.ImageIcon("C:\\Users\\HP 240 G8\\OneDrive\\Documents\\NetBeansProjects\\kasir-pbo\\src\\main\\java\\image\\logo gacogan.png")); // NOI18N
 
@@ -297,7 +299,7 @@ public class owner22 extends javax.swing.JFrame {
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btn_transaksi, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btn_produk, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addGap(0, 4, Short.MAX_VALUE))
+                .addGap(0, 8, Short.MAX_VALUE))
         );
 
         jPanel7.setBackground(new java.awt.Color(248, 248, 248));
@@ -484,11 +486,14 @@ public class owner22 extends javax.swing.JFrame {
             .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE)
         );
 
-        jLabel11.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel11.setText("RINGKASAN");
+        jLabel11.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel11.setText("DASHBOARD UTAMA");
 
-        jLabel12.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel12.setText("TRANSAKSI TERBARU");
+        jLabel12.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel12.setText("10 TRANSAKSI TERBARU");
+
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
         tbl_riwayat.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -516,6 +521,8 @@ public class owner22 extends javax.swing.JFrame {
             }
         });
         tbl_riwayat.setGridColor(new java.awt.Color(204, 204, 204));
+        tbl_riwayat.setMaximumSize(new java.awt.Dimension(450, 300));
+        tbl_riwayat.setMinimumSize(new java.awt.Dimension(450, 300));
         tbl_riwayat.setRowHeight(30);
         tbl_riwayat.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(tbl_riwayat);
@@ -524,39 +531,43 @@ public class owner22 extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 720, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel12)
-                            .addComponent(jLabel11)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel12)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel11)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(24, 24, 24)
                 .addComponent(jLabel11)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel9, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
                 .addComponent(jLabel12)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -611,7 +622,7 @@ public class owner22 extends javax.swing.JFrame {
                 }
             }
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.log(java.util.logging.Level.SEVERE, "Gagal mengatur Look and Feel Nimbus", ex);
         }
         //</editor-fold>
 
