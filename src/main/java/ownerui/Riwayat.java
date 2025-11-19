@@ -453,7 +453,7 @@ public class Riwayat extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        Owner home = new Owner();
+        owner22 home = new owner22();
         home.setVisible(true);
         this.dispose();            // TODO add your handling code here:
     }//GEN-LAST:event_jButton7ActionPerformed
@@ -463,7 +463,7 @@ public class Riwayat extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        OwnerMenu menu = new OwnerMenu();
+        OwnerMenu2 menu = new OwnerMenu2();
         menu.setVisible(true);
         this.dispose();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed

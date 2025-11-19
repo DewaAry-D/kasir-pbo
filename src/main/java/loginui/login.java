@@ -6,7 +6,7 @@ package loginui;
 
 import kasirui.Kasir1;
 import kokiui.kokifix;
-import ownerui.Owner;
+import ownerui.owner22;
 
 /**
  *
@@ -173,7 +173,7 @@ public class login extends javax.swing.JFrame {
             this.dispose();
         } 
         else if(jTextField1.getText().equals(username3)&& jTextField2.getText().equals(pw3)){
-            Owner owner = new Owner();
+            owner22 owner = new owner22();
             owner.setVisible(true);
             this.dispose();
 }
