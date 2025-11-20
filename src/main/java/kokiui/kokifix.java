@@ -174,7 +174,7 @@ public class kokifix extends javax.swing.JFrame {
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 0));
 
-        jLabel8.setIcon(new javax.swing.ImageIcon("D:\\PROJECT\\kasir-pbo\\program-kasir-pbo\\src\\main\\java\\gambar\\logo.png")); // NOI18N
+        jLabel8.setIcon(new javax.swing.ImageIcon("D:\\PROJECT\\kasir-pbo\\program-kasir-pbo\\src\\main\\java\\image\\logo.png")); // NOI18N
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Pending", "Success" }));
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {

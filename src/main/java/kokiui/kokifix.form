@@ -137,6 +137,11 @@
           </Layout>
           <SubComponents>
             <Component class="javax.swing.JLabel" name="jLabel8">
+              <Properties>
+                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                  <Image iconType="2" name="D:\PROJECT\kasir-pbo\program-kasir-pbo\src\main\java\image\logo.png"/>
+                </Property>
+              </Properties>
             </Component>
             <Component class="javax.swing.JComboBox" name="jComboBox1">
               <Properties>

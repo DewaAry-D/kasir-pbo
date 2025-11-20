@@ -39,7 +39,7 @@
                   <Component id="lblGambar" alignment="0" min="-2" max="-2" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="btnEdit" min="-2" pref="40" max="-2" attributes="0"/>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="55" max="-2" attributes="0"/>
                       <Component id="btnDelete" min="-2" pref="34" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -108,7 +108,7 @@
     <Component class="javax.swing.JButton" name="btnEdit">
       <Properties>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="2" name="C:\Users\HP 240 G8\OneDrive\Documents\NetBeansProjects\kasir-pbo\src\main\java\image\edit.png"/>
+          <Image iconType="2" name="D:\PROJECT\kasir-pbo\program-kasir-pbo\src\main\java\image\edit.png"/>
         </Property>
         <Property name="horizontalTextPosition" type="int" value="0"/>
       </Properties>
@@ -119,7 +119,7 @@
     <Component class="javax.swing.JButton" name="btnDelete">
       <Properties>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="2" name="C:\Users\HP 240 G8\OneDrive\Documents\NetBeansProjects\kasir-pbo\src\main\java\image\delete.png"/>
+          <Image iconType="2" name="D:\PROJECT\kasir-pbo\program-kasir-pbo\src\main\java\image\delete.png"/>
         </Property>
         <Property name="horizontalTextPosition" type="int" value="0"/>
       </Properties>
