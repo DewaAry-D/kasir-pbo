@@ -8,9 +8,10 @@ import javax.swing.ImageIcon;
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 import javax.swing.JOptionPane;
-import ownerui.OwnerMenu2;
 import controller.ProductController;
 import database.DbConnection;
+import java.io.File;
+import java.net.HttpURLConnection;
 import java.util.logging.Level;
 
 public class CardProduct extends javax.swing.JPanel {
@@ -56,9 +57,39 @@ public class CardProduct extends javax.swing.JPanel {
             @Override
             protected ImageIcon doInBackground() throws Exception {
                 Image img = null;
-                URL url = new URL(path);
-                img = ImageIO.read(url);
-
+                
+                if (path.startsWith("http://") || path.startsWith("https://")) {
+                    try {
+                        URL url = new URL(path);
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                        connection.setConnectTimeout(5000);
+                        connection.setReadTimeout(5000);
+                        connection.connect();
+                        
+                        if (connection.getResponseCode() == 200) {
+                            try (java.io.InputStream input = connection.getInputStream()) {
+                                img = ImageIO.read(input);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Gagal download URL: " + e.getMessage());
+                    }
+                }
+                
+                else {
+                    try {
+                        File f = new File(path.trim().replace("\\\\", "\\"));
+                        if (f.exists()) {
+                            img = ImageIO.read(f);
+                        } else {
+                            System.err.println("File lokal tidak ditemukan: " + path);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Gagal baca file lokal: " + e.getMessage());
+                    }
+                }
+                
                 if (img != null) {
                     int width = lblGambar.getWidth();
                     int height = lblGambar.getHeight();
@@ -67,13 +98,14 @@ public class CardProduct extends javax.swing.JPanel {
                     Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
                     return new ImageIcon(scaledImg);
                 }
+                
                 return null;
             }
 
             @Override
             protected void done() {
                 try {
-                    ImageIcon finalIcon = get(); // Ambil hasil dari doInBackground()
+                    ImageIcon finalIcon = get();
                     if (finalIcon != null) {
                         lblGambar.setIcon(finalIcon);
                         lblGambar.setText("");
@@ -82,7 +114,7 @@ public class CardProduct extends javax.swing.JPanel {
                         lblGambar.setText("Fail Load");
                     }
                 } catch (Exception ex) {
-                    logger.log(Level.SEVERE, "Gagal memuat gambar dari URL: " + path, ex);
+                    logger.log(Level.SEVERE, "Gagal memuat gambar: " + path, ex);
                     lblGambar.setIcon(null);
                     lblGambar.setText("Error");
                 }
