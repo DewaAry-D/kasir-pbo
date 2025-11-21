@@ -176,7 +176,7 @@ public class login extends javax.swing.JFrame {
             owner22 owner = new owner22();
             owner.setVisible(true);
             this.dispose();
-}
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**

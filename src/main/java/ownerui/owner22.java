@@ -487,9 +487,11 @@ public class owner22 extends javax.swing.JFrame {
         );
 
         jLabel11.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel11.setText("DASHBOARD UTAMA");
 
         jLabel12.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel12.setText("10 TRANSAKSI TERBARU");
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -520,10 +522,12 @@ public class owner22 extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        tbl_riwayat.setGridColor(new java.awt.Color(204, 204, 204));
+        tbl_riwayat.setGridColor(new java.awt.Color(255, 204, 102));
         tbl_riwayat.setMaximumSize(new java.awt.Dimension(450, 300));
         tbl_riwayat.setMinimumSize(new java.awt.Dimension(450, 300));
         tbl_riwayat.setRowHeight(30);
+        tbl_riwayat.setSelectionBackground(new java.awt.Color(255, 204, 51));
+        tbl_riwayat.setSelectionForeground(new java.awt.Color(0, 0, 0));
         tbl_riwayat.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(tbl_riwayat);
 
@@ -543,12 +547,12 @@ public class owner22 extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jLabel12)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel11)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))

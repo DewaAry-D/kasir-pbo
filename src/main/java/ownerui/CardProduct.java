@@ -18,7 +18,7 @@ public class CardProduct extends javax.swing.JPanel {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(OwnerMenu2.class.getName());
 
-    private Product product;
+    private final Product product;
     
     private SwingWorker<ImageIcon, Void> imageLoader;
 
@@ -93,7 +93,7 @@ public class CardProduct extends javax.swing.JPanel {
                 if (img != null) {
                     int width = lblGambar.getWidth();
                     int height = lblGambar.getHeight();
-                    if (width == 0) width = 121;
+                    if (width == 0) width = 129;
                     if (height == 0) height = 72;
                     Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
                     return new ImageIcon(scaledImg);
@@ -123,6 +123,49 @@ public class CardProduct extends javax.swing.JPanel {
         imageLoader.execute();
     }
     
+    public void restoreMode() {
+        btnDelete.setIcon(null);
+        btnDelete.setText("restore");
+        btnDelete.setToolTipText("Pulihkan Produk Ini");
+        
+        btnDelete.setPreferredSize(new java.awt.Dimension(76, btnDelete.getHeight()));
+
+        this.setBackground(new java.awt.Color(240, 240, 240));
+
+        for (java.awt.event.ActionListener al : btnDelete.getActionListeners()) {
+            btnDelete.removeActionListener(al);
+        }
+
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                int jawaban = JOptionPane.showConfirmDialog(CardProduct.this, 
+                    "Kembalikan produk " + product.getName() + " ke menu utama?",
+                    "Konfirmasi Restore", JOptionPane.YES_NO_OPTION);
+
+                if (jawaban == JOptionPane.YES_OPTION) {
+                    try {
+                        DbConnection db = new DbConnection();
+                        ProductController controller = new ProductController(db);
+
+                        if (controller.restoreProduk(product.getId())) {
+                            JOptionPane.showMessageDialog(CardProduct.this, "Produk berhasil dipulihkan!");
+
+                            OwnerMenu2 menu = (OwnerMenu2) SwingUtilities.getWindowAncestor(CardProduct.this);
+                            if (menu != null) {
+                                menu.loadDataSampah(); 
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        btnEdit.setVisible(false);
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -136,9 +179,9 @@ public class CardProduct extends javax.swing.JPanel {
         txtDeskripsi = new javax.swing.JTextArea();
 
         setBackground(new java.awt.Color(255, 255, 255));
-        setMaximumSize(new java.awt.Dimension(157, 260));
-        setMinimumSize(new java.awt.Dimension(157, 260));
-        setPreferredSize(new java.awt.Dimension(157, 260));
+        setMaximumSize(new java.awt.Dimension(157, 250));
+        setMinimumSize(new java.awt.Dimension(157, 250));
+        setPreferredSize(new java.awt.Dimension(157, 250));
 
         lblNamaProduk.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblNamaProduk.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -156,6 +199,8 @@ public class CardProduct extends javax.swing.JPanel {
 
         btnEdit.setIcon(new javax.swing.ImageIcon("C:\\Users\\HP 240 G8\\OneDrive\\Documents\\NetBeansProjects\\kasir-pbo\\src\\main\\java\\image\\edit.png")); // NOI18N
         btnEdit.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEdit.setMinimumSize(new java.awt.Dimension(40, 30));
+        btnEdit.setPreferredSize(new java.awt.Dimension(40, 30));
         btnEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnEditActionPerformed(evt);
@@ -163,7 +208,10 @@ public class CardProduct extends javax.swing.JPanel {
         });
 
         btnDelete.setIcon(new javax.swing.ImageIcon("C:\\Users\\HP 240 G8\\OneDrive\\Documents\\NetBeansProjects\\kasir-pbo\\src\\main\\java\\image\\delete.png")); // NOI18N
+        btnDelete.setToolTipText("");
         btnDelete.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnDelete.setMinimumSize(new java.awt.Dimension(36, 30));
+        btnDelete.setPreferredSize(new java.awt.Dimension(36, 30));
         btnDelete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDeleteActionPerformed(evt);
@@ -172,9 +220,10 @@ public class CardProduct extends javax.swing.JPanel {
 
         lblGambar.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblGambar.setText("lblGambar");
-        lblGambar.setMaximumSize(new java.awt.Dimension(121, 72));
-        lblGambar.setMinimumSize(new java.awt.Dimension(121, 72));
-        lblGambar.setPreferredSize(new java.awt.Dimension(121, 72));
+        lblGambar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
+        lblGambar.setMaximumSize(new java.awt.Dimension(129, 72));
+        lblGambar.setMinimumSize(new java.awt.Dimension(129, 72));
+        lblGambar.setPreferredSize(new java.awt.Dimension(129, 72));
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
@@ -207,17 +256,17 @@ public class CardProduct extends javax.swing.JPanel {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblGambar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(lblGambar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lblNamaProduk, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -225,11 +274,11 @@ public class CardProduct extends javax.swing.JPanel {
                 .addComponent(lblHarga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addGap(12, 12, 12))
         );
     }// </editor-fold>//GEN-END:initComponents
 
