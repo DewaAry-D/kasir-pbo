@@ -73,7 +73,7 @@ public final class OwnerMenu2 extends javax.swing.JFrame {
         targetPanel.removeAll();
 
         int kolom = 3; 
-        int gap = 2;
+        int gap = 3;
         targetPanel.setLayout(new GridLayout(0, kolom, gap, gap));
 
         int jumlahProdukDitampilkan = 0;
@@ -349,15 +349,15 @@ public final class OwnerMenu2 extends javax.swing.JFrame {
 
         panelScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         panelScroll.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        panelScroll.setMaximumSize(new java.awt.Dimension(513, 350));
-        panelScroll.setMinimumSize(new java.awt.Dimension(513, 350));
-        panelScroll.setPreferredSize(new java.awt.Dimension(513, 350));
+        panelScroll.setMaximumSize(new java.awt.Dimension(520, 350));
+        panelScroll.setMinimumSize(new java.awt.Dimension(520, 350));
+        panelScroll.setPreferredSize(new java.awt.Dimension(520, 350));
 
-        panelContainerMain.setMaximumSize(new java.awt.Dimension(513, 350));
-        panelContainerMain.setMinimumSize(new java.awt.Dimension(513, 350));
+        panelContainerMain.setMaximumSize(new java.awt.Dimension(520, 350));
+        panelContainerMain.setMinimumSize(new java.awt.Dimension(520, 350));
         panelContainerMain.setOpaque(false);
-        panelContainerMain.setPreferredSize(new java.awt.Dimension(513, 350));
-        panelContainerMain.setLayout(new java.awt.GridLayout(0, 3, 2, 2));
+        panelContainerMain.setPreferredSize(new java.awt.Dimension(520, 350));
+        panelContainerMain.setLayout(new java.awt.GridLayout());
         panelScroll.setViewportView(panelContainerMain);
 
         jButton23.setBackground(new java.awt.Color(255, 255, 102));
@@ -405,12 +405,12 @@ public final class OwnerMenu2 extends javax.swing.JFrame {
                         .addGap(62, 62, 62)
                         .addComponent(jButton21, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButton24, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addGroup(mainLayout.createSequentialGroup()
+                        .addComponent(jButton24, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(panelScroll, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         mainLayout.setVerticalGroup(
             mainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -980,15 +980,15 @@ public final class OwnerMenu2 extends javax.swing.JFrame {
 
         panelScroll1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         panelScroll1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        panelScroll1.setMaximumSize(new java.awt.Dimension(513, 350));
-        panelScroll1.setMinimumSize(new java.awt.Dimension(513, 350));
-        panelScroll1.setPreferredSize(new java.awt.Dimension(513, 350));
+        panelScroll1.setMaximumSize(new java.awt.Dimension(520, 350));
+        panelScroll1.setMinimumSize(new java.awt.Dimension(520, 350));
+        panelScroll1.setPreferredSize(new java.awt.Dimension(520, 350));
 
-        panelContainerSampah.setMaximumSize(new java.awt.Dimension(513, 350));
-        panelContainerSampah.setMinimumSize(new java.awt.Dimension(513, 350));
+        panelContainerSampah.setMaximumSize(new java.awt.Dimension(520, 350));
+        panelContainerSampah.setMinimumSize(new java.awt.Dimension(520, 350));
         panelContainerSampah.setOpaque(false);
-        panelContainerSampah.setPreferredSize(new java.awt.Dimension(513, 350));
-        panelContainerSampah.setLayout(new java.awt.GridLayout(0, 3, 2, 2));
+        panelContainerSampah.setPreferredSize(new java.awt.Dimension(520, 350));
+        panelContainerSampah.setLayout(new java.awt.GridLayout());
         panelScroll1.setViewportView(panelContainerSampah);
 
         jButton28.setBackground(new java.awt.Color(255, 255, 102));
