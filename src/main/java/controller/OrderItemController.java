@@ -36,8 +36,9 @@ public class OrderItemController {
             
             try ( ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    DbConnection db = null;
                     
-                    Product product = new Product();
+                    Product product = new Product(db);
                     product.setId(rs.getInt("product_id"));
                     product.setName(rs.getString("name"));
 //                    product.setPrice(rs.getDouble("price"));
