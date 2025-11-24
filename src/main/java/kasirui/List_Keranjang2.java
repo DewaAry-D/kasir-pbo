@@ -26,8 +26,6 @@ public class List_Keranjang2 extends javax.swing.JFrame {
         int totalQty = 0;
         
         // 3. Tampilkan Ringkasan di Panel Kanan
-        lblSubtotal.setText("Subtotal: Rp "+ grandTotal);
-        lblTotalItems.setText(totalQty + " Items");
         
         jPanelList.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
             
@@ -37,8 +35,10 @@ public class List_Keranjang2 extends javax.swing.JFrame {
             jPanelList.add(card);
             
             grandTotal += item.getTotalPrice();
-            item.getQuantity();
+            totalQty += item.getQuantity();
         }
+        lblSubtotal.setText("Subtotal: Rp "+ grandTotal);
+        lblTotalItems.setText(totalQty + " Items");
         jPanelList.revalidate();
         jPanelList.repaint();
     }
@@ -377,7 +377,7 @@ public class List_Keranjang2 extends javax.swing.JFrame {
         javax.swing.JOptionPane.showMessageDialog(this, "Nama Customer harus diisi!");
         return;
     }
-
+    
     try {
         // 2. AMBIL DAN UBAH TEXT MENJADI ANGKA (INI YANG KURANG TADI)
         // Pastikan nama variabel text field uang Anda benar (misal: txtUang)

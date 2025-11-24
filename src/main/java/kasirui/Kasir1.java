@@ -106,7 +106,8 @@ public class Kasir1 extends javax.swing.JFrame {
 
     public void updateSubtotal(double hargaBarang, int qty) {
         totalHarga = totalHarga + hargaBarang;
-        jLabelSubtotal.setText("Subtotal : Rp " + totalHarga);
+        System.out.println(totalHarga);
+        jLabelSubtotal.setText("Subtotal : Rp " + String.format("%.2f", totalHarga));
         totalItem = totalItem + qty;
         jLabelTotalItem.setText(totalItem + " items");
     }
