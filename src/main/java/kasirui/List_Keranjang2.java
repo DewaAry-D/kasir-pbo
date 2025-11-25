@@ -1,24 +1,44 @@
 package kasirui;
 
-import java.util.ArrayList;
 import java.util.List;
-import javax.swing.BoxLayout;
-import javax.swing.JOptionPane;
+import amodels.Product;
+import database.DbConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class List_Keranjang2 extends javax.swing.JFrame {
 
     // Variabel penampung data
     private List<CartItem> daftarBelanja;
     private double grandTotal = 0;
+    private DbConnection db;
+    private Product product;
 
     // UBAH CONSTRUCTOR: Terima parameter List<CartItem>
     public List_Keranjang2(List<CartItem> dataDariKasir1) {
         initComponents();
-        this.daftarBelanja = dataDariKasir1;
+        try {
+            this.db = new DbConnection();
+            this.daftarBelanja = dataDariKasir1;
+            this.product = new Product(db);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         
         setupTampilan();
     }
-    
+    private String generateTransactionCode() {
+    // Format: TRX-[TahunBulanTanggal]-[JamMenitDetik]
+    // Contoh Hasil: TRX-20231125-143005
+    SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+    String timestamp = sdf.format(new Date());
+    return "TDS-" + timestamp;
+}
     private void setupTampilan() {
         // 1. Bersihkan Panel Kiri (Wadah list)
         jPanelList.removeAll(); // Ganti jPanelList dengan nama panel kiri kamu
@@ -373,16 +393,68 @@ public class List_Keranjang2 extends javax.swing.JFrame {
     }//GEN-LAST:event_txtNamaActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    if (txtNama.getText().isEmpty()) {
+    
+        if (txtNama.getText().isEmpty()) {
         javax.swing.JOptionPane.showMessageDialog(this, "Nama Customer harus diisi!");
         return;
     }
-    
+    double uangBayar = 0;
     try {
-        // 2. AMBIL DAN UBAH TEXT MENJADI ANGKA (INI YANG KURANG TADI)
-        // Pastikan nama variabel text field uang Anda benar (misal: txtUang)
-        double uangBayar = Double.parseDouble(txtUang.getText());
+        uangBayar = Double.parseDouble(txtUang.getText());
+    } catch (NumberFormatException e) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Format uang salah!");
+        return;
+    }
+
+    if (uangBayar < grandTotal) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Uang kurang!");
+        return;
+    }
+    String orderNumber = generateTransactionCode();
+    String sqlOrder = "INSERT INTO orders (order_number, name, total_price, amount_payment, status, notes) VALUES (?, ?, ?, ?, ?, ?)";
+    String sqlItem = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?,?, ?)";
+    Connection conn = null;
+    PreparedStatement psOrder = null;
+    PreparedStatement psItem = null;
+    ResultSet rs = null;
+    try {
+        conn = db.getConnection(); 
+        conn.setAutoCommit(false);
+        Statement stmt = conn.createStatement();
+        psOrder = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
+        psOrder.setString(1, orderNumber);
+        psOrder.setString(2, txtNama.getText());
+        psOrder.setDouble(3, grandTotal);
+        psOrder.setDouble(4, uangBayar);
+        psOrder.setString(5, "pending"); // Status default
+        psOrder.setString(6, jTextField3.getText());
         
+        int affectedRows = psOrder.executeUpdate();
+        int orderId = 0;
+        if(affectedRows > 0){
+        rs = psOrder.getGeneratedKeys();
+        if (rs.next()) {
+            orderId = rs.getInt(1);
+        } else {
+            throw new SQLException("Gagal mengambil ID Order.");
+        }}else {
+    throw new SQLException("Gagal menyimpan order, tidak ada baris yang terpengaruh.");
+}
+        
+        
+        psItem = conn.prepareStatement(sqlItem);
+        
+        for (CartItem item : daftarBelanja) {
+//             System.out.println("   Product ID = " + item.getId() + " | Price = " + item.getPrice());
+            psItem.setInt(1, orderId);
+            
+            // Pastikan CartItem memiliki method getId() untuk mengambil Product ID
+            psItem.setInt(2, item.getId()); 
+            psItem.setInt (3, item.getQuantity());
+            psItem.setDouble(4, item.getTotalPrice());
+            psItem.addBatch();
+        }
+        psItem.executeBatch();
         // Cek apakah uang cukup
         if (uangBayar < grandTotal) {
             javax.swing.JOptionPane.showMessageDialog(this, "Uang pembayaran kurang!");
@@ -394,13 +466,40 @@ public class List_Keranjang2 extends javax.swing.JFrame {
         double kembalian = uangBayar - grandTotal;
         
         // 4. Kirim ke Struk
+        
+        conn.commit();
         Struk halamanStruk = new Struk(daftarBelanja, grandTotal, uangBayar, kembalian, nama);
         halamanStruk.setVisible(true);
-        this.dispose();
-        
-    } catch (NumberFormatException e) {
+             this.dispose();
+       
+    }catch (SQLException e) {
+        // JIKA ADA ERROR, BATALKAN SEMUA PENYIMPANAN (ROLLBACK)
+        if (conn != null) {
+            try {
+                conn.rollback();
+                System.out.println("Transaksi dibatalkan (Rollback).");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    System.err.println("Error Database: " + e.getMessage());
+        e.printStackTrace();
+        javax.swing.JOptionPane.showMessageDialog(this, "Gagal menyimpan transaksi: " + e.getMessage());} 
+    catch (NumberFormatException e) {
         javax.swing.JOptionPane.showMessageDialog(this, "Masukkan nominal uang yang valid (Angka saja)!");
+    } 
+    finally {
+        // Tutup resource agar tidak memory leak
+        try {
+            if (rs != null) rs.close();
+            if (psOrder != null) psOrder.close();
+            if (psItem != null) psItem.close();
+            if (conn != null) conn.setAutoCommit(true); // Kembalikan ke default
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
+    
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
