@@ -51,6 +51,7 @@ public class OrderItemController {
             
             try ( ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    DbConnection db = null;
                     
                     Product product = new Product();
                     
@@ -77,6 +78,7 @@ public class OrderItemController {
                     }
         
                     product.setIsActive(rs.getBoolean("product_is_active"));
+
                     
                     OrderItem item = new OrderItem();
                     

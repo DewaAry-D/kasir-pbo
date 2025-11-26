@@ -1,5 +1,6 @@
 package amodels;
 
+import database.DbConnection;
 import java.sql.Timestamp;
 
 public class Product {
@@ -14,8 +15,12 @@ public class Product {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    
     public Product() {
+        
+    }
+    
+    public Product(DbConnection db) {
+        
     }
 
     public Product(String name, Double price, String description, String foto, KategoriProduk category) {
