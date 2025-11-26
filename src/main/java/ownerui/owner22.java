@@ -1,13 +1,26 @@
 package ownerui;
 
 import database.DbConnection;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.Locale;
-import javax.swing.table.DefaultTableModel;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.sql.Connection;
+import java.sql.Statement;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import java.awt.Font;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.NumberAxis;
 
 
 public class owner22 extends javax.swing.JFrame {
@@ -30,58 +43,7 @@ public class owner22 extends javax.swing.JFrame {
         loadJumlahProduk();
         loadTotalTransaksi();
         loadTotalPendapatan();
-        loadRiwayatTransaksi();
-        pengaturanTabel();
-    }
-    
-    private void pengaturanTabel() {
-        javax.swing.table.DefaultTableCellRenderer toolTip = new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (value != null) {
-                    setToolTipText(value.toString());
-                }
-                return this;
-            }
-        };
-    
-        // rata tengah header
-        ((javax.swing.table.DefaultTableCellRenderer) tbl_riwayat.getTableHeader().getDefaultRenderer())
-        .setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        // rata tengah value
-        javax.swing.table.DefaultTableCellRenderer centerRenderer = new javax.swing.table.DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        
-        javax.swing.table.TableColumnModel columnModel = tbl_riwayat.getColumnModel();
-
-        // Kolom No
-        columnModel.getColumn(0).setPreferredWidth(40); 
-        columnModel.getColumn(0).setMaxWidth(50);
-        columnModel.getColumn(0).setMinWidth(40); 
-        columnModel.getColumn(0).setCellRenderer(centerRenderer);
-
-        // Kolom Waktu Transaksi
-        columnModel.getColumn(1).setPreferredWidth(150);
-        columnModel.getColumn(1).setCellRenderer(centerRenderer);
-
-        // Kolom Order Number
-        columnModel.getColumn(2).setPreferredWidth(140);
-        columnModel.getColumn(2).setCellRenderer(centerRenderer);
-
-        // Kolom Nama Produk
-        columnModel.getColumn(3).setPreferredWidth(250); 
-        columnModel.getColumn(3).setMinWidth(200); 
-        columnModel.getColumn(3).setCellRenderer(toolTip);
-
-        // Kolom Jumlah
-        columnModel.getColumn(4).setPreferredWidth(60);
-        columnModel.getColumn(4).setCellRenderer(centerRenderer);
-
-        // Kolom Dibayar
-        columnModel.getColumn(5).setPreferredWidth(150);
-        columnModel.getColumn(5).setCellRenderer(toolTip);
+        initChart();
     }
     
     private void loadJumlahProduk() {
@@ -144,65 +106,71 @@ public class owner22 extends javax.swing.JFrame {
             logger.log(java.util.logging.Level.SEVERE, "Gagal load total Pendapatan!", e);
         }
     }
-
-    private void loadRiwayatTransaksi() {
-        String sql = 
-            "SELECT " +
-            "o.created_at AS waktu_transaksi, " +
-            "o.order_number, " +
-            "GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ')') SEPARATOR ', ') AS produk_list, " +
-            "SUM(oi.quantity) AS total_quantity, " +
-            "o.amount_payment AS dibayar " +
-            "FROM orders o " +
-            "JOIN order_items oi ON o.id = oi.order_id " +
-            "JOIN products p ON oi.product_id = p.id " +
-            "GROUP BY o.id, o.order_number, o.created_at, o.amount_payment " +
-            "ORDER BY o.created_at DESC " +
-            "LIMIT 10";
+    
+    private void initChart () {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-
-            DefaultTableModel model = (DefaultTableModel) tbl_riwayat.getModel();
-            model.setRowCount(0);
-
-            int no = 1;
-
-            NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
+            String sql = "SELECT p.name, SUM(oi.quantity) as total_qty " +
+                         "FROM order_items oi " +
+                         "JOIN products p ON oi.product_id = p.id " +
+                         "GROUP BY p.name " +
+                         "ORDER BY total_qty DESC " +
+                         "LIMIT 5";
+            
+            Statement stm = conn.createStatement();
+            ResultSet rs = stm.executeQuery(sql);
 
             while (rs.next()) {
-                String waktu = rs.getString("waktu_transaksi");
-                String orderNumber = rs.getString("order_number");
-                String produkList = rs.getString("produk_list");
-                int qty = rs.getInt("total_quantity");
-                double bayar = rs.getDouble("dibayar");
+                String namaProduk = rs.getString("name");
+                int jumlah = rs.getInt("total_qty");
 
-                String formattedBayar = formatter.format(bayar).replace("Rp", "Rp ");
-
-                model.addRow(new Object[]{
-                    no++,
-                    waktu,
-                    orderNumber,
-                    produkList,
-                    qty,
-                    formattedBayar
-                });
+                dataset.setValue(jumlah, "Terjual", namaProduk);
             }
 
-            rs.close();
-            ps.close();
-
         } catch (Exception e) {
-            logger.log(java.util.logging.Level.SEVERE, "Gagal load riwayat transaksi!", e);
+            logger.log(java.util.logging.Level.SEVERE, "Gagal load grafik!", e);
         }
+
+        JFreeChart barChart = ChartFactory.createBarChart(
+            "5 Produk Terlaris",      // Judul Grafik
+            "Nama Produk",            // Label Sumbu X (Horizontal)
+            "Jumlah Terjual",         // Label Sumbu Y (Vertikal)
+            dataset,                  // Data yang sudah kita ambil tadi
+            PlotOrientation.VERTICAL, // Orientasi Grafik
+            false,                    // Show Legend (Kotak keterangan warna)
+            true,                     // Tooltips
+            false                     // URLs
+        );
+        
+        Font fontTitle = new Font("SansSerif", Font.BOLD, 20); 
+        Font fontSubTitle = new Font("SansSerif", Font.BOLD, 14); 
+        Font fontValue = new Font("Segoe UI", Font.PLAIN, 12);
+        
+        barChart.getTitle().setFont(fontTitle);
+        
+        CategoryPlot plot = barChart.getCategoryPlot();
+        
+        CategoryAxis axisX = plot.getDomainAxis();
+        axisX.setLabelFont(fontSubTitle);
+        axisX.setTickLabelFont(fontValue);
+        
+        NumberAxis axisY = (NumberAxis) plot.getRangeAxis();
+        axisY.setLabelFont(fontSubTitle);
+        axisY.setTickLabelFont(fontValue);
+        
+        plot.setBackgroundPaint(new Color(248, 248, 248));
+
+        BarRenderer renderer = (BarRenderer) plot.getRenderer();
+        renderer.setSeriesPaint(0, new Color(255, 140, 0));
+        ChartPanel barPanel = new ChartPanel(barChart);
+
+        pnGrafik.removeAll();
+        pnGrafik.setLayout(new BorderLayout());
+        pnGrafik.add(barPanel, BorderLayout.CENTER);
+        pnGrafik.validate();
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -229,9 +197,7 @@ public class owner22 extends javax.swing.JFrame {
         jLabel7 = new javax.swing.JLabel();
         lbl_pendapatan = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
-        jLabel12 = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tbl_riwayat = new javax.swing.JTable();
+        pnGrafik = new javax.swing.JPanel();
 
         jButton5.setBackground(new java.awt.Color(255, 153, 51));
         jButton5.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -486,50 +452,25 @@ public class owner22 extends javax.swing.JFrame {
             .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE)
         );
 
-        jLabel11.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel11.setFont(new java.awt.Font("SansSerif", 1, 24)); // NOI18N
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel11.setText("DASHBOARD UTAMA");
+        jLabel11.setText("Dashboard Utama");
 
-        jLabel12.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel12.setText("10 TRANSAKSI TERBARU");
+        pnGrafik.setBackground(new java.awt.Color(248, 248, 248));
+        pnGrafik.setMaximumSize(new java.awt.Dimension(657, 283));
+        pnGrafik.setMinimumSize(new java.awt.Dimension(657, 283));
+        pnGrafik.setPreferredSize(new java.awt.Dimension(657, 283));
 
-        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-
-        tbl_riwayat.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"1", "2025-10-30 12:05:10", "TR-1001", "Mie Gato lvl1", "2", "30.000"},
-                {"2", "2025-10-30 12:05:10", "TR-1002", "Es Teh Manis", "2", "16.000"},
-                {"3", "2025-10-30 12:15:20", "TR-1003", "Ayam Geprek", "1", "20.000"},
-                {"4", "2025-10-30 12:40:05", "TR-1004", "Nasi Goreng Spesial", "1", "22.000"},
-                {"5", "2025-10-30 12:40:05", "TR-1005", "Es Teh Manis", "1", "8.000"},
-                {"6", "2025-10-30 13:10:30", "TR-1006", "Kopi Susu Gula Aren", "1", "18.000"},
-                {"7", "2025-10-30 13:10:30", "TR-1007", "Keripik Singkong Balado", "2", "24.000"},
-                {"8", "2025-10-30 14:05:00", "TR-1008", "Mie Gacogan", "3", "42.000"},
-                {"9", "2025-10-30 14:05:00", "TR-1009", "Es Teh Manis", "3", "24.000"},
-                {"10", "2025-10-30 14:30:15", "TR-1010", "Mie Gato lvl1", "1", "15.000"}
-            },
-            new String [] {
-                "No", "Waktu Transaksi", "Order Number", "Nama Produk", "Jumlah", "Dibayar (Rp)"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        tbl_riwayat.setGridColor(new java.awt.Color(255, 204, 102));
-        tbl_riwayat.setMaximumSize(new java.awt.Dimension(450, 300));
-        tbl_riwayat.setMinimumSize(new java.awt.Dimension(450, 300));
-        tbl_riwayat.setRowHeight(30);
-        tbl_riwayat.setSelectionBackground(new java.awt.Color(255, 204, 51));
-        tbl_riwayat.setSelectionForeground(new java.awt.Color(0, 0, 0));
-        tbl_riwayat.getTableHeader().setReorderingAllowed(false);
-        jScrollPane1.setViewportView(tbl_riwayat);
+        javax.swing.GroupLayout pnGrafikLayout = new javax.swing.GroupLayout(pnGrafik);
+        pnGrafik.setLayout(pnGrafikLayout);
+        pnGrafikLayout.setHorizontalGroup(
+            pnGrafikLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 657, Short.MAX_VALUE)
+        );
+        pnGrafikLayout.setVerticalGroup(
+            pnGrafikLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 283, Short.MAX_VALUE)
+        );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -538,20 +479,16 @@ public class owner22 extends javax.swing.JFrame {
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 720, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel12)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(pnGrafik, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel11)
@@ -561,7 +498,7 @@ public class owner22 extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addComponent(jLabel11)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -569,11 +506,9 @@ public class owner22 extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel9, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
-                .addComponent(jLabel12)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addComponent(pnGrafik, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(12, 12, 12))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -640,7 +575,6 @@ public class owner22 extends javax.swing.JFrame {
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -655,10 +589,9 @@ public class owner22 extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lbl_pendapatan;
     private javax.swing.JLabel lbl_produk;
     private javax.swing.JLabel lbl_transaksi;
-    private javax.swing.JTable tbl_riwayat;
+    private javax.swing.JPanel pnGrafik;
     // End of variables declaration//GEN-END:variables
 }
