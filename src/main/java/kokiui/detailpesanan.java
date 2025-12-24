@@ -1,18 +1,41 @@
 package kokiui;
 
 import amodels.OrderItem;
+import amodels.Product;
+import java.awt.Color;
 
 public class detailpesanan extends javax.swing.JPanel {
     
     private OrderItem orderItem;
+    private Integer count;
 
-    public detailpesanan(OrderItem orderItem) {
+    public detailpesanan(OrderItem orderItem, Integer count, String status) {
         this.orderItem = orderItem;
+        this.count = count;
         initComponents();
         
-//        jLabel14.setText(orderItem.)
+        Product product = orderItem.getProduct();
+        
+        jLabel14.setText(product.getName());
         jLabel15.setText(Integer.toString(orderItem.getQuantity()));
         
+        if (orderItem.isDone()) {
+            jCheckBox3.setSelected(true);
+        }
+        
+        if (status.equals("success")) {
+            jCheckBox3.setEnabled(false);
+        }
+        
+        if (count % 2 == 0) {
+            jPanel10.setBackground(Color.lightGray);
+        }
+        
+        setMaximumSize(getPreferredSize());
+    }
+    
+    public void addCheckBoxListener(java.awt.event.ItemListener listener) {
+        jCheckBox3.addItemListener(listener);
     }
 
     /**
@@ -30,9 +53,15 @@ public class detailpesanan extends javax.swing.JPanel {
         jCheckBox3 = new javax.swing.JCheckBox();
 
         jPanel10.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel10.addContainerListener(new java.awt.event.ContainerAdapter() {
+            public void componentAdded(java.awt.event.ContainerEvent evt) {
+                jPanel10ComponentAdded(evt);
+            }
+        });
 
         jLabel14.setText("Mie gato lvl3");
 
+        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel15.setText("1");
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
@@ -40,16 +69,16 @@ public class detailpesanan extends javax.swing.JPanel {
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
-                .addContainerGap(214, Short.MAX_VALUE)
+                .addContainerGap(234, Short.MAX_VALUE)
                 .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(89, 89, 89)
-                .addComponent(jCheckBox3)
-                .addGap(18, 18, 18))
+                .addGap(102, 102, 102)
+                .addComponent(jCheckBox3, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(22, 22, 22))
             .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel10Layout.createSequentialGroup()
                     .addGap(18, 18, 18)
-                    .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(208, Short.MAX_VALUE)))
+                    .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 204, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(205, Short.MAX_VALUE)))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -70,13 +99,21 @@ public class detailpesanan extends javax.swing.JPanel {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jPanel10ComponentAdded(java.awt.event.ContainerEvent evt) {//GEN-FIRST:event_jPanel10ComponentAdded
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jPanel10ComponentAdded
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

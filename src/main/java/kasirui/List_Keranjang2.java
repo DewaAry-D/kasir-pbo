@@ -1,33 +1,58 @@
 package kasirui;
 
-import java.util.ArrayList;
 import java.util.List;
-import javax.swing.BoxLayout;
-import javax.swing.JOptionPane;
+import amodels.Product;
+import database.DbConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class List_Keranjang2 extends javax.swing.JFrame {
 
-    // Variabel penampung data
     private List<CartItem> daftarBelanja;
     private double grandTotal = 0;
+    private DbConnection db;
+    private Product product;
 
-    // UBAH CONSTRUCTOR: Terima parameter List<CartItem>
     public List_Keranjang2(List<CartItem> dataDariKasir1) {
         initComponents();
-        this.daftarBelanja = dataDariKasir1;
-        
+        try {
+            this.db = new DbConnection();
+            this.daftarBelanja = dataDariKasir1;
+            this.product = new Product(db);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         setupTampilan();
+    }
+
+    private String generateTransactionCode() {
+    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+    String datePart = sdf.format(new Date());
+    int count = 0;
+
+    try {
+        String sql = "SELECT COUNT(*) as total FROM transaksi WHERE tanggal_transaksi = CURRENT_DATE";
+        java.sql.ResultSet rs = db.executeSelect(sql);
+        if (rs.next()) {
+            count = rs.getInt("total") + 1;
+        }
+    } catch (Exception e) {
+        count = 1; // 
+    }
+
+    String sequence = String.format("%03d", count);
+    return "TRX" + datePart + "-" + sequence;
     }
     
     private void setupTampilan() {
-        // 1. Bersihkan Panel Kiri (Wadah list)
-        jPanelList.removeAll(); // Ganti jPanelList dengan nama panel kiri kamu
-       
-        int totalQty = 0;
+        jPanelList.removeAll(); 
         
-        // 3. Tampilkan Ringkasan di Panel Kanan
-        lblSubtotal.setText("Subtotal: Rp "+ grandTotal);
-        lblTotalItems.setText(totalQty + " Items");
+        int totalQty = 0;
         
         jPanelList.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
             
@@ -37,8 +62,10 @@ public class List_Keranjang2 extends javax.swing.JFrame {
             jPanelList.add(card);
             
             grandTotal += item.getTotalPrice();
-            item.getQuantity();
+            totalQty += item.getQuantity();
         }
+        lblSubtotal.setText("Subtotal: Rp "+ grandTotal);
+        lblTotalItems.setText(totalQty + " Items");
         jPanelList.revalidate();
         jPanelList.repaint();
     }
@@ -85,8 +112,11 @@ public class List_Keranjang2 extends javax.swing.JFrame {
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 51));
 
+<<<<<<< HEAD
         jLabel52.setIcon(new javax.swing.ImageIcon("C:\\ProjekAkhirPBO\\kasir-pbo\\image\\logo.png")); // NOI18N
 
+=======
+>>>>>>> origin/dev/all
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -358,6 +388,7 @@ public class List_Keranjang2 extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField3ActionPerformed
@@ -373,64 +404,130 @@ public class List_Keranjang2 extends javax.swing.JFrame {
     }//GEN-LAST:event_txtNamaActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    if (txtNama.getText().isEmpty()) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Nama Customer harus diisi!");
-        return;
-    }
 
-    try {
-        // 2. AMBIL DAN UBAH TEXT MENJADI ANGKA (INI YANG KURANG TADI)
-        // Pastikan nama variabel text field uang Anda benar (misal: txtUang)
-        double uangBayar = Double.parseDouble(txtUang.getText());
+        if (txtNama.getText().isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Nama Customer harus diisi!");
+            return;
+        }
+        double uangBayar = 0;
         
-        // Cek apakah uang cukup
-        if (uangBayar < grandTotal) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Uang pembayaran kurang!");
+        try {
+            uangBayar = Double.parseDouble(txtUang.getText());
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Format uang salah!");
             return;
         }
 
-        // 3. Baru hitung kembalian (Sekarang uangBayar sudah dikenali)
-        String nama = txtNama.getText();
-        double kembalian = uangBayar - grandTotal;
+        if (uangBayar < grandTotal) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Uang kurang!");
+            return;
+        }
         
-        // 4. Kirim ke Struk
-        Struk halamanStruk = new Struk(daftarBelanja, grandTotal, uangBayar, kembalian, nama);
-        halamanStruk.setVisible(true);
-        this.dispose();
-        
-    } catch (NumberFormatException e) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Masukkan nominal uang yang valid (Angka saja)!");
-    }
+        String orderNumber = generateTransactionCode();
+        String sqlOrder = "INSERT INTO orders (order_number, name, total_price, amount_payment, status, notes) VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlItem = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?,?, ?)";
+        Connection conn = null;
+        PreparedStatement psOrder = null;
+        PreparedStatement psItem = null;
+        ResultSet rs = null;
+        try {
+            conn = db.getConnection(); 
+            conn.setAutoCommit(false);
+            Statement stmt = conn.createStatement();
+            psOrder = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
+            psOrder.setString(1, orderNumber);
+            psOrder.setString(2, txtNama.getText());
+            psOrder.setDouble(3, grandTotal);
+            psOrder.setDouble(4, uangBayar);
+            psOrder.setString(5, "pending");
+            psOrder.setString(6, jTextField3.getText());
+
+            int affectedRows = psOrder.executeUpdate();
+            int orderId = 0;
+            if(affectedRows > 0){
+                rs = psOrder.getGeneratedKeys();
+                if (rs.next()) {
+                    orderId = rs.getInt(1);
+                } else {
+                    throw new SQLException("Gagal mengambil ID Order.");
+                }
+            }else {
+                throw new SQLException("Gagal menyimpan order, tidak ada baris yang terpengaruh.");
+            }
+
+
+            psItem = conn.prepareStatement(sqlItem);
+
+            for (CartItem item : daftarBelanja) {
+
+                psItem.setInt(1, orderId);
+                psItem.setInt(2, item.getId()); 
+                psItem.setInt (3, item.getQuantity());
+                psItem.setDouble(4, item.getTotalPrice());
+                psItem.addBatch();
+            }
+            psItem.executeBatch();
+            if (uangBayar < grandTotal) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Uang pembayaran kurang!");
+                return;
+            }
+
+            String nama = txtNama.getText();
+            double kembalian = uangBayar - grandTotal;
+
+            conn.commit();
+            Struk halamanStruk = new Struk(daftarBelanja, grandTotal, uangBayar, kembalian, nama);
+            halamanStruk.setVisible(true);
+                 this.dispose();
+
+        }catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    System.out.println("Transaksi dibatalkan (Rollback).");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        System.err.println("Error Database: " + e.getMessage());
+            e.printStackTrace();
+            javax.swing.JOptionPane.showMessageDialog(this, "Gagal menyimpan transaksi: " + e.getMessage());} 
+        catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Masukkan nominal uang yang valid (Angka saja)!");
+        } 
+        finally {
+            try {
+                if (rs != null) rs.close();
+                if (psOrder != null) psOrder.close();
+                if (psItem != null) psItem.close();
+                if (conn != null) conn.setAutoCommit(true); // Kembalikan ke default
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         Kasir1 kasir = new Kasir1();
         kasir.setVisible(true);
-        this.dispose();// TODO add your handling code here:
+        this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void txtUangKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtUangKeyReleased
         try {
-        // 1. Ambil teks dari input uang
         String input = txtUang.getText();
         
-        // Cek jika kosong, anggap 0
         if (input.isEmpty()) {
             lblKembalian.setText("Kembalian: Rp 0");
             return;
         }
         
-        // 2. Ubah ke angka (Double)
         double uangBayar = Double.parseDouble(input);
         
-        // 3. Hitung kembalian (Uang - GrandTotal yang dihitung di setupTampilan)
         double kembalian = uangBayar - grandTotal;
         
-        // 4. Tampilkan ke Label
-        // Kita format sedikit agar rapi (misal jika minus tetap tampil minus)
         lblKembalian.setText("Kembalian: Rp " + String.format("%.0f", kembalian));
         lblPembayaran.setText("Pembayaran: Rp " + String.format("%.0f", uangBayar));
-        // Opsional: Ubah warna jika uang kurang
         if (kembalian < 0) {
             lblKembalian.setForeground(java.awt.Color.RED);
         } else {
@@ -438,9 +535,9 @@ public class List_Keranjang2 extends javax.swing.JFrame {
         }
         
         } catch (NumberFormatException e) {
-        // Jika user mengetik huruf, abaikan atau beri peringatan kecil
         lblKembalian.setText("Input Salah!");
-        } 
+
+        }    
     }//GEN-LAST:event_txtUangKeyReleased
 
     /**

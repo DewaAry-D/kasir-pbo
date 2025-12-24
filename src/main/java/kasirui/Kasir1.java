@@ -29,6 +29,7 @@ public class Kasir1 extends javax.swing.JFrame {
         try{ 
             this.db = new DbConnection();
             this.product=new Product(db);
+            this.product = new Product();
         }catch(Exception e){ 
             e.printStackTrace(); 
         }tampilMenu("semua");
@@ -85,8 +86,7 @@ public class Kasir1 extends javax.swing.JFrame {
     boolean ada = false;
 
         for (Component comp : jPanel3.getComponents()) {
-            if (comp instanceof listPesanan) {
-                listPesanan item = (listPesanan) comp; 
+            if (comp instanceof listPesanan item) { 
                 if (item.getProduct().getId() == p.getId()) {
                     item.tambahJumlah();
                     ada = true;
@@ -106,7 +106,8 @@ public class Kasir1 extends javax.swing.JFrame {
 
     public void updateSubtotal(double hargaBarang, int qty) {
         totalHarga = totalHarga + hargaBarang;
-        jLabelSubtotal.setText("Subtotal : Rp " + totalHarga);
+        System.out.println(totalHarga);
+        jLabelSubtotal.setText("Subtotal : Rp " + String.format("%.2f", totalHarga));
         totalItem = totalItem + qty;
         jLabelTotalItem.setText(totalItem + " items");
     }
@@ -183,6 +184,7 @@ public class Kasir1 extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
+<<<<<<< HEAD
                 .addComponent(jScrollPane2)
                 .addContainerGap())
         );
@@ -190,6 +192,13 @@ public class Kasir1 extends javax.swing.JFrame {
         jPanel38.setBackground(new java.awt.Color(255, 153, 0));
 
         jLabel7.setIcon(new javax.swing.ImageIcon("C:\\ProjekAkhirPBO\\kasir-pbo\\image\\logo.png")); // NOI18N
+=======
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jPanel38.setBackground(new java.awt.Color(255, 153, 0));
+>>>>>>> origin/dev/all
 
         javax.swing.GroupLayout jPanel38Layout = new javax.swing.GroupLayout(jPanel38);
         jPanel38.setLayout(jPanel38Layout);
@@ -373,7 +382,11 @@ public class Kasir1 extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+<<<<<<< HEAD
                         .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE))
+=======
+                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE))
+>>>>>>> origin/dev/all
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
@@ -392,6 +405,7 @@ public class Kasir1 extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnMinumanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMinumanActionPerformed
@@ -412,21 +426,16 @@ public class Kasir1 extends javax.swing.JFrame {
             return;
         }
     
-    // 2. Ambil data dari listPesanan di panel kanan
         java.util.List<CartItem> keranjang = new java.util.ArrayList<>();
     
         for (java.awt.Component comp : jPanel3.getComponents()) {
-            if (comp instanceof listPesanan) {
-                listPesanan visualItem = (listPesanan) comp;
-            
-            // Ambil Product dan Jumlah (Anda perlu menambahkan method getJumlah di listPesanan)
+            if (comp instanceof listPesanan visualItem) {
                 Product p = visualItem.getProduct();
                 int qty = visualItem.getJumlah();
                 keranjang.add(new CartItem(p, qty));
             }
         }   
     
-    // 3. Buka Halaman Baru & Kirim Data
         List_Keranjang2 halamanBaru = new List_Keranjang2(keranjang);
         halamanBaru.setVisible(true);
         this.dispose();
