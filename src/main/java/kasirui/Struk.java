@@ -9,13 +9,12 @@ import javax.swing.JPanel;
 
 public class Struk extends javax.swing.JFrame {
 
-    // Penampung data
     List<CartItem> items;
     double total, bayar, kembalian;
     String namaCustomer;
+    String orderNumber;
 
-    // CONSTRUCTOR KHUSUS (Menerima semua data transaksi)
-    public Struk(List<CartItem> items, double total, double bayar, double kembalian, String nama) {
+    public Struk(List<CartItem> items, double total, double bayar, double kembalian, String nama, String orderNumber) {
         initComponents();
         
         this.items = items;
@@ -23,80 +22,62 @@ public class Struk extends javax.swing.JFrame {
         this.bayar = bayar;
         this.kembalian = kembalian;
         this.namaCustomer = nama;
+        this.orderNumber = orderNumber;
         
         setupStruk();
     }
 
     private void setupStruk() {
-        // 1. Buat ID Transaksi Otomatis (Format: TR + TahunBulanHari + JamMenit)
-        SimpleDateFormat sdfId = new SimpleDateFormat("yyyyMMddHHmm");
-        String idTransaksi = "TR" + sdfId.format(new Date());
-        lblNoTransaksi.setText("#" + idTransaksi); // Pastikan ada label ini di design
+        lblNoTransaksi.setText("#" + orderNumber); 
         
-        // 2. Set Tanggal Hari Ini
         SimpleDateFormat sdfDate = new SimpleDateFormat("EEEE, dd MMMM yyyy");
-        lblTanggal.setText(sdfDate.format(new Date())); // Pastikan ada label ini
+        lblTanggal.setText(sdfDate.format(new Date())); 
         
-        // 3. Set Nama Customer
-        lblNamaCustomer.setText(namaCustomer); // Pastikan ada label ini
+        lblNamaCustomer.setText(namaCustomer);
         
-        // 4. Tampilkan List Barang Belanjaan
-        // Pastikan Anda punya JPanel kosong di tengah struk (misal: jPanelItems)
         jPanelItems.removeAll();
         jPanelItems.setLayout(new BoxLayout(jPanelItems, BoxLayout.Y_AXIS));
         
         for (CartItem item : items) {
         javax.swing.JPanel row = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
         
-        // --- LOGIKA BARU UNTUK GAP VERTIKAL ---
-        // Tambahkan border kosong di bawah sebesar 6 pixel sebagai jarak
         row.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 6, 0)); 
         
-        // Ubah tinggi dari 16 menjadi 22 (16 konten + 6 gap)
         java.awt.Dimension rowSize = new java.awt.Dimension(420, 22); 
         
         row.setPreferredSize(rowSize);
         row.setMaximumSize(rowSize);
         row.setMinimumSize(rowSize);
-        row.setBackground(new java.awt.Color(255, 255, 255)); // Putih atau sesuai background
+        row.setBackground(new java.awt.Color(255, 255, 255)); 
         
-        // 2. Label Nama Produk [73, 16]
         javax.swing.JLabel lblNama = new javax.swing.JLabel(item.getProduct().getName());
         lblNama.setPreferredSize(new java.awt.Dimension(73, 16));
         lblNama.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
         
-        // 3. Gap Horizontal (80)
         java.awt.Component gap1 = javax.swing.Box.createHorizontalStrut(80);
         
-        // 4. Label Qty [6, 16]
         javax.swing.JLabel lblQty = new javax.swing.JLabel(String.valueOf(item.getQuantity())); 
         lblQty.setPreferredSize(new java.awt.Dimension(6, 30));
         lblQty.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblQty.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
         
-        // 5. Gap Horizontal (95)
         java.awt.Component gap2 = javax.swing.Box.createHorizontalStrut(95);
         
-        // 6. Label Harga [54, 16]
         String hargaRapi = String.format("%.0f", item.getTotalPrice());
         javax.swing.JLabel lblHarga = new javax.swing.JLabel("Rp. " + hargaRapi);
-        // Note: Saya lebarkan sedikit dari 54 ke 100 agar "Rp." muat dan tidak terpotong titik-titik
         lblHarga.setPreferredSize(new java.awt.Dimension(100, 16)); 
         lblHarga.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         lblHarga.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
         
-        // --- SUSUN ---
         row.add(lblNama);
         row.add(gap1);
         row.add(lblQty);
         row.add(gap2);
         row.add(lblHarga);
         
-        // --- MASUKKAN KE PANEL UTAMA ---
         jPanelItems.add(row);
         }
         
-        // 5. Set Angka-angka Bawah
         lblSubTotal.setText("Rp " + total);
         lblBayar.setText("Rp " + bayar);
         lblKembalian.setText("Rp " + kembalian);
@@ -231,17 +212,17 @@ public class Struk extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(15, 15, 15)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanelItems, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanelItems, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel4)
-                    .addComponent(lblNoTransaksi, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel8)
                             .addComponent(lblTanggal, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(20, 20, 20)
-                        .addComponent(lblNamaCustomer, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(lblNamaCustomer, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(lblNoTransaksi, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(16, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(

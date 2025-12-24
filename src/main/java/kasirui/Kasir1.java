@@ -184,21 +184,12 @@ public class Kasir1 extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-<<<<<<< HEAD
-                .addComponent(jScrollPane2)
-                .addContainerGap())
-        );
-
-        jPanel38.setBackground(new java.awt.Color(255, 153, 0));
-
-        jLabel7.setIcon(new javax.swing.ImageIcon("C:\\ProjekAkhirPBO\\kasir-pbo\\image\\logo.png")); // NOI18N
-=======
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jPanel38.setBackground(new java.awt.Color(255, 153, 0));
->>>>>>> origin/dev/all
+
 
         javax.swing.GroupLayout jPanel38Layout = new javax.swing.GroupLayout(jPanel38);
         jPanel38.setLayout(jPanel38Layout);
@@ -382,11 +373,7 @@ public class Kasir1 extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-<<<<<<< HEAD
-                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE))
-=======
                         .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 371, Short.MAX_VALUE))
->>>>>>> origin/dev/all
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 0, Short.MAX_VALUE))
         );

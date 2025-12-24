@@ -11,12 +11,14 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+
 public class List_Keranjang2 extends javax.swing.JFrame {
 
     private List<CartItem> daftarBelanja;
     private double grandTotal = 0;
     private DbConnection db;
     private Product product;
+    private String orderNumber;
 
     public List_Keranjang2(List<CartItem> dataDariKasir1) {
         initComponents();
@@ -31,22 +33,38 @@ public class List_Keranjang2 extends javax.swing.JFrame {
     }
 
     private String generateTransactionCode() {
-    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-    String datePart = sdf.format(new Date());
-    int count = 0;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        String dateNow = sdf.format(new Date()); 
+        String prefix = "TRX-" + dateNow;       
 
-    try {
-        String sql = "SELECT COUNT(*) as total FROM transaksi WHERE tanggal_transaksi = CURRENT_DATE";
-        java.sql.ResultSet rs = db.executeSelect(sql);
-        if (rs.next()) {
-            count = rs.getInt("total") + 1;
+        int nextOrder = 1;
+
+        String sql = "SELECT order_number FROM orders " +
+                     "WHERE order_number LIKE '" + prefix + "%' " + 
+                     "ORDER BY order_number DESC LIMIT 1";
+
+        try (java.sql.Connection conn = db.getConnection();
+             java.sql.Statement stmt = conn.createStatement();
+             java.sql.ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                String lastCode = rs.getString("order_number");
+
+                if (lastCode != null && !lastCode.isEmpty()) {
+                    String lastSequence = lastCode.substring(lastCode.length() - 3);                
+                    nextOrder = Integer.parseInt(lastSequence) + 1;
+                }
+            } else {
+                System.out.println("Hasil: Data tidak ditemukan. Reset ke 001.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("ERROR KRITIS: " + e.getMessage());
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        count = 1; // 
-    }
-
-    String sequence = String.format("%03d", count);
-    return "TRX" + datePart + "-" + sequence;
+        String hasilAkhir = prefix + "-" + String.format("%03d", nextOrder);
+        System.out.println("Generated Code: " + hasilAkhir);
+        return hasilAkhir;
     }
     
     private void setupTampilan() {
@@ -111,12 +129,6 @@ public class List_Keranjang2 extends javax.swing.JFrame {
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 51));
-
-<<<<<<< HEAD
-        jLabel52.setIcon(new javax.swing.ImageIcon("C:\\ProjekAkhirPBO\\kasir-pbo\\image\\logo.png")); // NOI18N
-
-=======
->>>>>>> origin/dev/all
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -423,7 +435,7 @@ public class List_Keranjang2 extends javax.swing.JFrame {
             return;
         }
         
-        String orderNumber = generateTransactionCode();
+        orderNumber = generateTransactionCode();
         String sqlOrder = "INSERT INTO orders (order_number, name, total_price, amount_payment, status, notes) VALUES (?, ?, ?, ?, ?, ?)";
         String sqlItem = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?,?, ?)";
         Connection conn = null;
@@ -476,7 +488,7 @@ public class List_Keranjang2 extends javax.swing.JFrame {
             double kembalian = uangBayar - grandTotal;
 
             conn.commit();
-            Struk halamanStruk = new Struk(daftarBelanja, grandTotal, uangBayar, kembalian, nama);
+            Struk halamanStruk = new Struk(daftarBelanja, grandTotal, uangBayar, kembalian, nama, orderNumber);
             halamanStruk.setVisible(true);
                  this.dispose();
 
