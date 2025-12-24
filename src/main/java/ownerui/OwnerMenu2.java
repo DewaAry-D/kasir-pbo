@@ -357,7 +357,7 @@ public final class OwnerMenu2 extends javax.swing.JFrame {
         panelContainerMain.setMinimumSize(new java.awt.Dimension(520, 350));
         panelContainerMain.setOpaque(false);
         panelContainerMain.setPreferredSize(new java.awt.Dimension(520, 350));
-        panelContainerMain.setLayout(new java.awt.GridLayout());
+        panelContainerMain.setLayout(new java.awt.GridLayout(1, 0));
         panelScroll.setViewportView(panelContainerMain);
 
         jButton23.setBackground(new java.awt.Color(255, 255, 102));
@@ -988,7 +988,7 @@ public final class OwnerMenu2 extends javax.swing.JFrame {
         panelContainerSampah.setMinimumSize(new java.awt.Dimension(520, 350));
         panelContainerSampah.setOpaque(false);
         panelContainerSampah.setPreferredSize(new java.awt.Dimension(520, 350));
-        panelContainerSampah.setLayout(new java.awt.GridLayout());
+        panelContainerSampah.setLayout(new java.awt.GridLayout(1, 0));
         panelScroll1.setViewportView(panelContainerSampah);
 
         jButton28.setBackground(new java.awt.Color(255, 255, 102));
