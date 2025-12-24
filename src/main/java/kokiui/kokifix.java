@@ -8,6 +8,7 @@ import amodels.OrderItem;
 import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.JOptionPane;
 
 
 public class kokifix extends javax.swing.JFrame {
@@ -116,12 +117,24 @@ public class kokifix extends javax.swing.JFrame {
                         public void mouseClicked(java.awt.event.MouseEvent evt) {
                             boolean update = orderController.updateStatusById(daftarItemPesanan.get(0).getOrderId());
                             if (update) {
-                                jPanel7.removeAll();
-                                jTextArea2.setText("");
+                                int jawaban = JOptionPane.showConfirmDialog(
+                                        kokifix.this,
+                                        "Apakah Anda yakin tandai selesai ? ",
+                                        "Konfirmasi Tandai Selesai",
+                                        JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.WARNING_MESSAGE
+                                );
+                                
+                                if (jawaban == JOptionPane.YES_OPTION) {
+                                    jPanel7.removeAll();
+                                    jTextArea2.setText("");
 
-                                jPanel7.revalidate();
-                                jPanel7.repaint();
-                                muatDataPesanan("pending");
+                                    jPanel7.revalidate();
+                                    jPanel7.repaint();
+                                    muatDataPesanan("pending");
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(kokifix.this, "Belum semua detail list dicentang");
                             }
                         }
                     };
@@ -173,8 +186,6 @@ public class kokifix extends javax.swing.JFrame {
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 0));
-
-        jLabel8.setIcon(new javax.swing.ImageIcon("D:\\PROJECT\\kasir-pbo\\program-kasir-pbo\\src\\main\\java\\gambar\\logo.png")); // NOI18N
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Pending", "Success" }));
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {
@@ -314,6 +325,7 @@ public class kokifix extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
