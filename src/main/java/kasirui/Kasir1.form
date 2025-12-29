@@ -62,11 +62,8 @@
                       <Group type="102" attributes="0">
                           <Component id="jPanel7" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-<<<<<<< HEAD
                           <Component id="jPanel4" pref="368" max="32767" attributes="0"/>
-=======
-                          <Component id="jPanel4" pref="371" max="32767" attributes="0"/>
->>>>>>> origin/dev/all
+
                       </Group>
                       <Component id="jPanel5" min="-2" max="-2" attributes="0"/>
                   </Group>
@@ -103,11 +100,8 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-<<<<<<< HEAD
                       <Component id="jScrollPane2" max="32767" attributes="0"/>
-=======
-                      <Component id="jScrollPane2" pref="359" max="32767" attributes="0"/>
->>>>>>> origin/dev/all
+
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -225,10 +219,7 @@
           <SubComponents>
             <Container class="javax.swing.JPanel" name="jPanel12">
               <Properties>
-<<<<<<< HEAD
-                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                  <Image iconType="2" name="C:\ProjekAkhirPBO\kasir-pbo\image\logo.png"/>
-=======
+
                 <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="ff" green="ff" red="ff" type="rgb"/>
                 </Property>
@@ -236,7 +227,7 @@
                   <Border info="org.netbeans.modules.form.compat2.border.MatteColorBorderInfo">
                     <MatteColorBorder bottom="0" left="0" right="0" top="1"/>
                   </Border>
->>>>>>> origin/dev/all
+
                 </Property>
               </Properties>
 
