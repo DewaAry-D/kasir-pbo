@@ -169,9 +169,9 @@ public class login extends javax.swing.JFrame {
                 String role = rs.getString("role");
 
                 // 3. Arahkan berdasarkan role
-                if (role.equalsIgnoreCase("kasir")) {
+                if (role.equalsIgnoreCase("cashier")) {
                     new Kasir1().setVisible(true);
-                } else if (role.equalsIgnoreCase("koki")) {
+                } else if (role.equalsIgnoreCase("chef")) {
                     new kokifix().setVisible(true);
                 } else if (role.equalsIgnoreCase("owner")) {
                     new owner22().setVisible(true);
