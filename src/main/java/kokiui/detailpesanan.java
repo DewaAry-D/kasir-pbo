@@ -1,8 +1,9 @@
 package kokiui;
 
+import java.awt.Color;
+
 import amodels.OrderItem;
 import amodels.Product;
-import java.awt.Color;
 
 public class detailpesanan extends javax.swing.JPanel {
     
@@ -114,6 +115,7 @@ public class detailpesanan extends javax.swing.JPanel {
     private void jPanel10ComponentAdded(java.awt.event.ContainerEvent evt) {//GEN-FIRST:event_jPanel10ComponentAdded
         // TODO add your handling code here:
     }//GEN-LAST:event_jPanel10ComponentAdded
+
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

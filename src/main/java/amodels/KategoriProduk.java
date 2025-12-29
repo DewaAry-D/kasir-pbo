@@ -5,4 +5,5 @@ public enum KategoriProduk {
     FOODS,
     BEVERAGES,
     SNACKS
+
 }

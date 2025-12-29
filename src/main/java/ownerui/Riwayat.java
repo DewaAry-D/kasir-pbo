@@ -3,7 +3,32 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package ownerui;
-
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import javax.swing.*;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import java.io.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 /**
  *
  * @author ARY DWIS
@@ -13,10 +38,201 @@ public class Riwayat extends javax.swing.JFrame {
     /**
      * Creates new form coba2
      */
+    private static final int ITEMS_PER_PAGE = 5;
+    private int currentPage = 1;
+    private String filterStatus = "all";
+    private String startDate = "";
+    private String endDate = "";
     public Riwayat() {
         initComponents();
+        loadOrders();
+        jPanel3.setVisible(false); // atau hapus dari parent
+        jPanel3.getParent().remove(jPanel3);
+    }
+private void loadOrders() {
+    panel_isiriwayat.removeAll();
+    panel_isiriwayat.setLayout(new BoxLayout(panel_isiriwayat, BoxLayout.Y_AXIS));
+
+    // ✅ Tambahkan header yang sejajar
+    panel_isiriwayat.add(createHeaderPanel());
+
+    List<Order> orders = fetchOrdersFromDB();
+    if (orders.isEmpty()) {
+        panel_isiriwayat.add(new JLabel("Tidak ada data transaksi."));
+    } else {
+        for (Order order : orders) {
+            JPanel row = createOrderRow(order);
+            panel_isiriwayat.add(row);
+            panel_isiriwayat.add(Box.createRigidArea(new Dimension(0, 5)));
+        }
     }
 
+    panel_isiriwayat.revalidate();
+    panel_isiriwayat.repaint();
+
+    // Update pagination
+    int total = getTotalOrderCount();
+    int totalPages = (int) Math.ceil((double) total / ITEMS_PER_PAGE);
+    jLabel36.setText(String.format("Showing %d to %d of %d results",
+        (currentPage - 1) * ITEMS_PER_PAGE + 1,
+        Math.min(currentPage * ITEMS_PER_PAGE, total),
+        total));
+}
+
+    private List<Order> fetchOrdersFromDB() {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT id, order_number, total_price, status, created_at FROM orders WHERE 1=1";
+        
+        if (!filterStatus.equals("all")) {
+            sql += " AND status = ?";
+        }
+        if (!startDate.isEmpty()) {
+            sql += " AND created_at >= ?";
+        }
+        if (!endDate.isEmpty()) {
+            sql += " AND created_at <= ?";
+        }
+        sql += " ORDER BY created_at DESC LIMIT ?, ?";
+
+        try (Connection conn = new database.DbConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int paramIndex = 1;
+            if (!filterStatus.equals("all")) {
+                stmt.setString(paramIndex++, filterStatus);
+            }
+            if (!startDate.isEmpty()) {
+                stmt.setString(paramIndex++, startDate + " 00:00:00");
+            }
+            if (!endDate.isEmpty()) {
+                stmt.setString(paramIndex++, endDate + " 23:59:59");
+            }
+            stmt.setInt(paramIndex++, (currentPage - 1) * ITEMS_PER_PAGE);
+            stmt.setInt(paramIndex++, ITEMS_PER_PAGE);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Order order = new Order();
+                order.id = rs.getInt("id");
+                order.orderNumber = rs.getString("order_number");
+                order.totalPrice = rs.getDouble("total_price");
+                order.status = rs.getString("status");
+                order.createdAt = rs.getTimestamp("created_at");
+                orders.add(order);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Gagal memuat data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return orders;
+    }
+
+    private int getTotalOrderCount() {
+        String sql = "SELECT COUNT(*) FROM orders WHERE 1=1";
+        if (!filterStatus.equals("all")) sql += " AND status = ?";
+        if (!startDate.isEmpty()) sql += " AND created_at >= ?";
+        if (!endDate.isEmpty()) sql += " AND created_at <= ?";
+
+        try (Connection conn = new database.DbConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int paramIndex = 1;
+            if (!filterStatus.equals("all")) stmt.setString(paramIndex++, filterStatus);
+            if (!startDate.isEmpty()) stmt.setString(paramIndex++, startDate + " 00:00:00");
+            if (!endDate.isEmpty()) stmt.setString(paramIndex++, endDate + " 23:59:59");
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    private JPanel createOrderRow(Order order) {
+        JPanel row = new JPanel(new GridBagLayout());
+        row.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, java.awt.Color.LIGHT_GRAY));
+        row.setBackground(java.awt.Color.WHITE);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        String waktuText = sdf.format(order.createdAt);
+        String kodeText = order.orderNumber;
+        String subtotalText = "Rp " + String.format("%.0f", order.totalPrice);
+        String statusText = order.status;
+
+        // Tentukan lebar tetap (dalam piksel)
+        int colWaktu = 150;
+        int colKode = 120;
+        int colSubtotal = 100;
+        int colStatus = 80;
+        int colAksi = 100; // untuk 2 tombol
+
+        // Kolom 0: Waktu
+        gbc.gridx = 0;
+        gbc.weightx = 0.0; // non-weighted
+        JLabel waktuLabel = new JLabel(waktuText);
+        waktuLabel.setPreferredSize(new Dimension(colWaktu, 25));
+        row.add(waktuLabel, gbc);
+
+        // Kolom 1: Kode
+        gbc.gridx = 1;
+        JLabel kodeLabel = new JLabel(kodeText);
+        kodeLabel.setPreferredSize(new Dimension(colKode, 25));
+        row.add(kodeLabel, gbc);
+
+        // Kolom 2: Subtotal
+        gbc.gridx = 2;
+        JLabel subtotalLabel = new JLabel(subtotalText);
+        subtotalLabel.setPreferredSize(new Dimension(colSubtotal, 25));
+        row.add(subtotalLabel, gbc);
+
+        // Kolom 3: Status
+        gbc.gridx = 3;
+        JLabel statusLabel = new JLabel(statusText);
+        statusLabel.setForeground(order.status.equals("success") ? java.awt.Color.GREEN : java.awt.Color.ORANGE);
+        statusLabel.setPreferredSize(new Dimension(colStatus, 25));
+        row.add(statusLabel, gbc);
+
+        // Kolom 4: Aksi (rata kanan)
+        gbc.gridx = 4;
+        gbc.anchor = GridBagConstraints.EAST;
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        actionPanel.setOpaque(false);
+        JButton viewBtn = new JButton("👁️");
+        JButton printBtn = new JButton("🖨️");
+        styleActionButton(viewBtn);
+        styleActionButton(printBtn);
+        int orderId = order.id;
+        viewBtn.addActionListener(e -> openReceipt(orderId));
+        printBtn.addActionListener(e -> openReceipt(orderId));
+        actionPanel.add(viewBtn);
+        actionPanel.add(printBtn);
+        actionPanel.setPreferredSize(new Dimension(colAksi, 25));
+        row.add(actionPanel, gbc);
+
+        // Agar baris mengisi lebar penuh
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        return row;
+    }
+
+// Helper untuk styling tombol aksi
+private void styleActionButton(JButton btn) {
+    btn.setBorderPainted(false);
+    btn.setContentAreaFilled(false);
+    btn.setFocusable(false);
+    btn.setMargin(new Insets(0, 0, 0, 0));
+}
+
+    private void openReceipt(int orderId) {
+        // Arahkan ke halaman struk (bisa buat kelas baru: StrukFrame)
+        StrukOwner struk = new StrukOwner(orderId);
+        struk.setVisible(true);
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -29,15 +245,15 @@ public class Riwayat extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jLabel18 = new javax.swing.JLabel();
-        jButton6 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
+        btn_produk = new javax.swing.JButton();
+        btn_home = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
-        jPanel6 = new javax.swing.JPanel();
+        panel_isiriwayat = new javax.swing.JPanel();
         jLabel14 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
@@ -51,15 +267,13 @@ public class Riwayat extends javax.swing.JFrame {
         jLabel9 = new javax.swing.JLabel();
         jLabel30 = new javax.swing.JLabel();
         jLabel31 = new javax.swing.JLabel();
-        jPanel9 = new javax.swing.JPanel();
+        panel_footer = new javax.swing.JPanel();
         jLabel36 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jButton8 = new javax.swing.JButton();
-        jButton9 = new javax.swing.JButton();
+        btn_previous = new javax.swing.JButton();
+        btn_next = new javax.swing.JButton();
+        btn_filter = new javax.swing.JButton();
+        btn_download = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -67,25 +281,25 @@ public class Riwayat extends javax.swing.JFrame {
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 0));
 
-        jButton6.setBackground(new java.awt.Color(255, 153, 51));
-        jButton6.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jButton6.setForeground(new java.awt.Color(255, 255, 255));
-        jButton6.setText("Produk");
-        jButton6.setBorder(null);
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
+        btn_produk.setBackground(new java.awt.Color(255, 153, 51));
+        btn_produk.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        btn_produk.setForeground(new java.awt.Color(255, 255, 255));
+        btn_produk.setText("Produk");
+        btn_produk.setBorder(null);
+        btn_produk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
+                btn_produkActionPerformed(evt);
             }
         });
 
-        jButton7.setBackground(new java.awt.Color(255, 153, 51));
-        jButton7.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jButton7.setForeground(new java.awt.Color(255, 255, 255));
-        jButton7.setText("Home");
-        jButton7.setBorder(null);
-        jButton7.addActionListener(new java.awt.event.ActionListener() {
+        btn_home.setBackground(new java.awt.Color(255, 153, 51));
+        btn_home.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        btn_home.setForeground(new java.awt.Color(255, 255, 255));
+        btn_home.setText("Home");
+        btn_home.setBorder(null);
+        btn_home.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton7ActionPerformed(evt);
+                btn_homeActionPerformed(evt);
             }
         });
 
@@ -97,23 +311,19 @@ public class Riwayat extends javax.swing.JFrame {
                 .addGap(26, 26, 26)
                 .addComponent(jLabel18)
                 .addGap(55, 55, 55)
-                .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(btn_home, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12)
+                .addComponent(btn_produk, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(474, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton6, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel18, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap())
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(6, 6, 6)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel18, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_home, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_produk, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         jPanel3.setBackground(new java.awt.Color(255, 153, 0));
@@ -142,11 +352,11 @@ public class Riwayat extends javax.swing.JFrame {
                 .addComponent(jLabel1)
                 .addGap(107, 107, 107)
                 .addComponent(jLabel2)
-                .addGap(138, 138, 138)
+                .addGap(103, 103, 103)
                 .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 132, Short.MAX_VALUE)
+                .addGap(79, 79, 79)
                 .addComponent(jLabel4)
-                .addGap(81, 81, 81)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 169, Short.MAX_VALUE)
                 .addComponent(jLabel5)
                 .addGap(38, 38, 38))
         );
@@ -163,7 +373,7 @@ public class Riwayat extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel6.setBackground(new java.awt.Color(255, 255, 255));
+        panel_isiriwayat.setBackground(new java.awt.Color(255, 255, 255));
 
         jLabel14.setFont(new java.awt.Font("ITF Devanagari", 0, 13)); // NOI18N
         jLabel14.setText("👁️");
@@ -234,11 +444,11 @@ public class Riwayat extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+        javax.swing.GroupLayout panel_isiriwayatLayout = new javax.swing.GroupLayout(panel_isiriwayat);
+        panel_isiriwayat.setLayout(panel_isiriwayatLayout);
+        panel_isiriwayatLayout.setHorizontalGroup(
+            panel_isiriwayatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panel_isiriwayatLayout.createSequentialGroup()
                 .addGap(15, 15, 15)
                 .addComponent(jLabel15)
                 .addGap(36, 36, 36)
@@ -252,15 +462,15 @@ public class Riwayat extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(jLabel35, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panel_isiriwayatLayout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+        panel_isiriwayatLayout.setVerticalGroup(
+            panel_isiriwayatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panel_isiriwayatLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(panel_isiriwayatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -272,105 +482,70 @@ public class Riwayat extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jPanel9.setBackground(new java.awt.Color(255, 153, 0));
+        panel_footer.setBackground(new java.awt.Color(255, 153, 0));
 
         jLabel36.setFont(new java.awt.Font("ITF Devanagari", 0, 13)); // NOI18N
         jLabel36.setText("Showing 1 to 3 result");
 
-        jButton1.setBackground(new java.awt.Color(255, 102, 0));
-        jButton1.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
-        jButton1.setText("<prev");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btn_previous.setBackground(new java.awt.Color(255, 102, 0));
+        btn_previous.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
+        btn_previous.setText("<prev");
+        btn_previous.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btn_previousActionPerformed(evt);
             }
         });
 
-        jButton2.setBackground(new java.awt.Color(255, 102, 0));
-        jButton2.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
-        jButton2.setText("next>");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        btn_next.setBackground(new java.awt.Color(255, 102, 0));
+        btn_next.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
+        btn_next.setText("next>");
+        btn_next.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                btn_nextActionPerformed(evt);
             }
         });
 
-        jButton3.setBackground(new java.awt.Color(255, 255, 102));
-        jButton3.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
-        jButton3.setText("1");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
-            }
-        });
-
-        jButton4.setBackground(new java.awt.Color(255, 102, 51));
-        jButton4.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
-        jButton4.setText("2");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
-            }
-        });
-
-        jButton5.setBackground(new java.awt.Color(255, 102, 51));
-        jButton5.setFont(new java.awt.Font("Gujarati MT", 1, 13)); // NOI18N
-        jButton5.setText("3");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
-        jPanel9.setLayout(jPanel9Layout);
-        jPanel9Layout.setHorizontalGroup(
-            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel9Layout.createSequentialGroup()
+        javax.swing.GroupLayout panel_footerLayout = new javax.swing.GroupLayout(panel_footer);
+        panel_footer.setLayout(panel_footerLayout);
+        panel_footerLayout.setHorizontalGroup(
+            panel_footerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panel_footerLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel36)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btn_previous, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(91, 91, 91)
+                .addComponent(btn_next)
                 .addContainerGap())
         );
-        jPanel9Layout.setVerticalGroup(
-            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+        panel_footerLayout.setVerticalGroup(
+            panel_footerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panel_footerLayout.createSequentialGroup()
                 .addContainerGap(11, Short.MAX_VALUE)
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(panel_footerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel36)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2)
-                    .addComponent(jButton3)
-                    .addComponent(jButton4)
-                    .addComponent(jButton5))
+                    .addComponent(btn_previous)
+                    .addComponent(btn_next))
                 .addContainerGap())
         );
 
-        jButton8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jButton8.setForeground(new java.awt.Color(255, 153, 0));
-        jButton8.setText("Filter");
-        jButton8.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 153, 0)));
-        jButton8.addActionListener(new java.awt.event.ActionListener() {
+        btn_filter.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btn_filter.setForeground(new java.awt.Color(255, 153, 0));
+        btn_filter.setText("Filter");
+        btn_filter.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 153, 0)));
+        btn_filter.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton8ActionPerformed(evt);
+                btn_filterActionPerformed(evt);
             }
         });
 
-        jButton9.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jButton9.setForeground(new java.awt.Color(255, 153, 0));
-        jButton9.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 153, 0)));
-        jButton9.addActionListener(new java.awt.event.ActionListener() {
+        btn_download.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btn_download.setForeground(new java.awt.Color(255, 153, 0));
+        btn_download.setText("Download");
+        btn_download.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 153, 0)));
+        btn_download.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton9ActionPerformed(evt);
+                btn_downloadActionPerformed(evt);
             }
         });
 
@@ -378,34 +553,41 @@ public class Riwayat extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(23, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButton8, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(17, 17, 17))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addComponent(panel_isiriwayat, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 717, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addComponent(panel_footer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addComponent(btn_filter, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(507, 507, 507)
+                    .addComponent(btn_download, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(23, 23, 23)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jButton9, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE)
-                    .addComponent(jButton8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(29, 29, 29)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btn_filter, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_download, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(31, 31, 31)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(2, 2, 2)
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(154, 154, 154)
-                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 24, Short.MAX_VALUE))
+                .addComponent(panel_isiriwayat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(54, 54, 54)
+                .addComponent(panel_footer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -428,46 +610,382 @@ public class Riwayat extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void btn_previousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_previousActionPerformed
+if (currentPage > 1) {
+            currentPage--;
+            loadOrders();
+        }
+    }//GEN-LAST:event_btn_previousActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void btn_nextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_nextActionPerformed
+        int total = getTotalOrderCount();
+        int totalPages = (int) Math.ceil((double) total / ITEMS_PER_PAGE);
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadOrders();
+        }
+    }//GEN-LAST:event_btn_nextActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton3ActionPerformed
-
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton4ActionPerformed
-
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton5ActionPerformed
-
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+    private void btn_homeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_homeActionPerformed
         owner22 home = new owner22();
         home.setVisible(true);
         this.dispose();            // TODO add your handling code here:
-    }//GEN-LAST:event_jButton7ActionPerformed
+    }//GEN-LAST:event_btn_homeActionPerformed
 
-    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton8ActionPerformed
+    private void btn_filterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_filterActionPerformed
+String status = (String) JOptionPane.showInputDialog(
+            this,
+            "Filter berdasarkan status:",
+            "Filter",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            new String[]{"all", "success", "pending"},
+            filterStatus
+        );
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        if (status != null) {
+            filterStatus = status;
+        }
+
+        // Opsional: tambahkan filter tanggal
+        startDate = JOptionPane.showInputDialog(this, "Tanggal mulai (YYYY-MM-DD):", "");
+        endDate = JOptionPane.showInputDialog(this, "Tanggal akhir (YYYY-MM-DD):", "");
+
+        currentPage = 1;
+        loadOrders();
+    }//GEN-LAST:event_btn_filterActionPerformed
+
+    private void btn_produkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_produkActionPerformed
         OwnerMenu2 menu = new OwnerMenu2();
         menu.setVisible(true);
         this.dispose();        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton6ActionPerformed
+    }//GEN-LAST:event_btn_produkActionPerformed
 
-    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton9ActionPerformed
+    private void btn_downloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_downloadActionPerformed
+String format = (String) JOptionPane.showInputDialog(
+            this,
+            "Pilih format download:",
+            "Download Riwayat",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            new String[]{"PDF", "Excel"},
+            "PDF"
+        );
 
+        if ("PDF".equals(format)) {
+            exportToPDF();
+        } else if ("Excel".equals(format)) {
+            exportToExcel();
+        }
+    }//GEN-LAST:event_btn_downloadActionPerformed
+private void exportToPDF() {
+    // Pilih lokasi simpan file
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setDialogTitle("Simpan Riwayat Transaksi sebagai PDF");
+    fileChooser.setSelectedFile(new File("riwayat_transaksi.pdf"));
+    FileNameExtensionFilter filter = new FileNameExtensionFilter("PDF Files", "pdf");
+    fileChooser.setFileFilter(filter);
+
+    int userSelection = fileChooser.showSaveDialog(this);
+    if (userSelection != JFileChooser.APPROVE_OPTION) {
+        return;
+    }
+
+    File file = fileChooser.getSelectedFile();
+    String filePath = file.getAbsolutePath();
+    if (!filePath.toLowerCase().endsWith(".pdf")) {
+        filePath += ".pdf";
+    }
+
+    try {
+        PdfWriter writer = new PdfWriter(filePath);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        Document document = new Document(pdfDoc);
+
+        // Judul laporan
+        document.add(new Paragraph("LAPORAN RIWAYAT TRANSAKSI")
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontSize(18)
+                .setBold()
+                .setMarginBottom(20));
+
+        // Ambil semua order
+        String sql = """
+            SELECT o.id, o.order_number, o.name, o.total_price, o.amount_payment, o.status, o.created_at
+            FROM orders o
+            ORDER BY o.created_at DESC
+            """;
+
+        try (Connection conn = new database.DbConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                int orderId = rs.getInt("id");
+                String orderNumber = rs.getString("order_number");
+                String customer = rs.getString("name");
+                double total = rs.getDouble("total_price");
+                double payment = rs.getDouble("amount_payment");
+                String status = rs.getString("status");
+                Timestamp createdAt = rs.getTimestamp("created_at");
+
+                // Format tanggal
+                String dateStr = new java.text.SimpleDateFormat("dd MMMM yyyy HH:mm", 
+                    new java.util.Locale("id", "ID")).format(createdAt);
+
+                // Header transaksi
+                document.add(new Paragraph("_transaksi # " + orderNumber)
+                        .setBold()
+                        .setFontSize(12)
+                        .setUnderline()
+                        .setMarginTop(10)
+                        .setMarginBottom(5));
+                document.add(new Paragraph("Pelanggan: " + customer));
+                document.add(new Paragraph("Tanggal: " + dateStr));
+                document.add(new Paragraph("Status: " + (status.equals("success") ? "Sukses" : "Pending"))
+                        .setFontColor(status.equals("success") ? com.itextpdf.kernel.colors.ColorConstants.GREEN 
+                                                              : com.itextpdf.kernel.colors.ColorConstants.ORANGE));
+                document.add(new Paragraph(""));
+
+                // Ambil item transaksi
+                String itemSql = """
+                    SELECT p.name AS product_name, oi.quantity, oi.price
+                    FROM order_items oi
+                    JOIN products p ON oi.product_id = p.id
+                    WHERE oi.order_id = ?
+                    """;
+                try (PreparedStatement itemStmt = conn.prepareStatement(itemSql)) {
+                    itemStmt.setInt(1, orderId);
+                    ResultSet itemRs = itemStmt.executeQuery();
+
+                    // Tabel item
+                    com.itextpdf.layout.element.Table table = new com.itextpdf.layout.element.Table(UnitValue.createPercentArray(new float[]{3, 1, 2}))
+                            .setWidth(UnitValue.createPercentValue(100))
+                            .setMarginBottom(10);
+
+                    table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Produk")).setBold());
+                    table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Qty")).setBold());
+                    table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Harga")).setBold());
+
+                    while (itemRs.next()) {
+                        String prodName = itemRs.getString("product_name");
+                        int qty = itemRs.getInt("quantity");
+                        double price = itemRs.getDouble("price");
+
+                        table.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(prodName)));
+                        table.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(String.valueOf(qty))));
+                        table.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Rp " + (int) price)));
+                    }
+
+                    document.add(table);
+                }
+
+                // Total & pembayaran
+                double change = payment - total;
+                document.add(new Paragraph("Subtotal: Rp " + (int) total));
+                document.add(new Paragraph("Pembayaran: Rp " + (int) payment));
+                document.add(new Paragraph("Kembalian: Rp " + (int) change));
+                
+            }
+        }
+
+        document.close();
+        JOptionPane.showMessageDialog(this, "File PDF berhasil disimpan:\n" + filePath, 
+                "Sukses", JOptionPane.INFORMATION_MESSAGE);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Gagal membuat PDF:\n" + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+    private void exportToExcel() {
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setDialogTitle("Simpan Riwayat sebagai Excel");
+    fileChooser.setSelectedFile(new java.io.File("riwayat_transaksi.xlsx"));
+    FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files (.xlsx)", "xlsx");
+    fileChooser.setFileFilter(filter);
+
+    int userSelection = fileChooser.showSaveDialog(this);
+    if (userSelection != JFileChooser.APPROVE_OPTION) {
+        return;
+    }
+
+    java.io.File file = fileChooser.getSelectedFile();
+    String filePath = file.getAbsolutePath();
+    if (!filePath.toLowerCase().endsWith(".xlsx")) {
+        filePath += ".xlsx";
+    }
+
+    try (Workbook workbook = new XSSFWorkbook()) {
+        // === Sheet 1: Daftar Transaksi (orders) ===
+        Sheet orderSheet = workbook.createSheet("Transaksi");
+        Row headerRow = orderSheet.createRow(0);
+
+        String[] headers = {"ID", "No. Transaksi", "Pelanggan", "Total", "Pembayaran", "Status", "Tanggal"};
+        CellStyle headerStyle = workbook.createCellStyle();
+        org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        for (int i = 0; i < headers.length; i++) {
+            org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Ambil data orders
+        String orderSql = """
+            SELECT id, order_number, name, total_price, amount_payment, status, created_at
+            FROM orders
+            ORDER BY created_at DESC
+            """;
+
+        int rowNum = 1;
+        try (Connection conn = new database.DbConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(orderSql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Row row = orderSheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(rs.getInt("id"));
+                row.createCell(1).setCellValue(rs.getString("order_number"));
+                row.createCell(2).setCellValue(rs.getString("name"));
+                row.createCell(3).setCellValue(rs.getDouble("total_price"));
+                row.createCell(4).setCellValue(rs.getDouble("amount_payment"));
+                row.createCell(5).setCellValue(rs.getString("status"));
+                row.createCell(6).setCellValue(rs.getTimestamp("created_at").toString());
+            }
+        }
+
+        // Atur lebar kolom otomatis
+        for (int i = 0; i < headers.length; i++) {
+            orderSheet.autoSizeColumn(i);
+        }
+
+        // === Sheet 2: Detail Item Transaksi ===
+        Sheet itemSheet = workbook.createSheet("Detail Item");
+        Row itemHeaderRow = itemSheet.createRow(0);
+        String[] itemHeaders = {"ID Transaksi", "No. Transaksi", "Produk", "Qty", "Harga Satuan", "Subtotal"};
+        
+        for (int i = 0; i < itemHeaders.length; i++) {
+            org.apache.poi.ss.usermodel.Cell cell = itemHeaderRow.createCell(i);
+            cell.setCellValue(itemHeaders[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Ambil data item
+        String itemSql = """
+            SELECT o.id AS order_id, o.order_number, p.name AS product_name, 
+                   oi.quantity, oi.price, (oi.quantity * oi.price) AS subtotal
+            FROM order_items oi
+            JOIN orders o ON oi.order_id = o.id
+            JOIN products p ON oi.product_id = p.id
+            ORDER BY o.created_at DESC, o.id
+            """;
+
+        int itemRowNum = 1;
+        try (Connection conn = new database.DbConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(itemSql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Row row = itemSheet.createRow(itemRowNum++);
+                row.createCell(0).setCellValue(rs.getInt("order_id"));
+                row.createCell(1).setCellValue(rs.getString("order_number"));
+                row.createCell(2).setCellValue(rs.getString("product_name"));
+                row.createCell(3).setCellValue(rs.getInt("quantity"));
+                row.createCell(4).setCellValue(rs.getDouble("price"));
+                row.createCell(5).setCellValue(rs.getDouble("subtotal"));
+            }
+        }
+
+        for (int i = 0; i < itemHeaders.length; i++) {
+            itemSheet.autoSizeColumn(i);
+        }
+
+        // Simpan file
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            workbook.write(out);
+        }
+
+        JOptionPane.showMessageDialog(this, "File Excel berhasil disimpan:\n" + filePath,
+                "Sukses", JOptionPane.INFORMATION_MESSAGE);
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Gagal mengambil data dari database: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+    } catch (IOException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Gagal menyimpan file Excel: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+    private JPanel createHeaderPanel() {
+    JPanel header = new JPanel(new GridBagLayout());
+    header.setBackground(new java.awt.Color(255, 153, 0));
+    header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, java.awt.Color.WHITE));
+
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.insets = new Insets(5, 5, 5, 5);
+    gbc.anchor = GridBagConstraints.WEST;
+
+    int colWaktu = 150;
+    int colKode = 120;
+    int colSubtotal = 100;
+    int colStatus = 80;
+    int colAksi = 100;
+
+    java.awt.Font boldFont = new java.awt.Font("ITF Devanagari", java.awt.Font.BOLD, 13);
+
+    gbc.gridx = 0;
+    JLabel waktu = new JLabel("Waktu");
+    waktu.setFont(boldFont);
+    waktu.setPreferredSize(new Dimension(colWaktu, 25));
+    header.add(waktu, gbc);
+
+    gbc.gridx = 1;
+    JLabel kode = new JLabel("Kode");
+    kode.setFont(boldFont);
+    kode.setPreferredSize(new Dimension(colKode, 25));
+    header.add(kode, gbc);
+
+    gbc.gridx = 2;
+    JLabel subtotal = new JLabel("Subtotal");
+    subtotal.setFont(boldFont);
+    subtotal.setPreferredSize(new Dimension(colSubtotal, 25));
+    header.add(subtotal, gbc);
+
+    gbc.gridx = 3;
+    JLabel status = new JLabel("Status");
+    status.setFont(boldFont);
+    status.setPreferredSize(new Dimension(colStatus, 25));
+    header.add(status, gbc);
+
+    gbc.gridx = 4;
+    gbc.anchor = GridBagConstraints.EAST;
+    JLabel aksi = new JLabel("Aksi");
+    aksi.setFont(boldFont);
+    aksi.setPreferredSize(new Dimension(colAksi, 25));
+    header.add(aksi, gbc);
+
+    return header;
+}
+    private static class Order {
+        int id;
+        String orderNumber;
+        double totalPrice;
+        String status;
+        Timestamp createdAt;
+    }
     /**
      * @param args the command line arguments
      */
@@ -505,15 +1023,12 @@ public class Riwayat extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
-    private javax.swing.JButton jButton8;
-    private javax.swing.JButton jButton9;
+    private javax.swing.JButton btn_download;
+    private javax.swing.JButton btn_filter;
+    private javax.swing.JButton btn_home;
+    private javax.swing.JButton btn_next;
+    private javax.swing.JButton btn_previous;
+    private javax.swing.JButton btn_produk;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
@@ -537,7 +1052,8 @@ public class Riwayat extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel6;
-    private javax.swing.JPanel jPanel9;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel panel_footer;
+    private javax.swing.JPanel panel_isiriwayat;
     // End of variables declaration//GEN-END:variables
 }

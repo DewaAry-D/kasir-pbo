@@ -490,4 +490,3 @@ public class Kasir1 extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
 }
-
