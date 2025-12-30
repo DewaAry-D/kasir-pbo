@@ -1,10 +1,18 @@
 package kasirui;
 
+import amodels.Product;
+import javax.swing.SwingWorker;
+import java.net.URL;
 import java.awt.Image;
 import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.net.HttpURLConnection;
+import java.util.logging.Level;
 
 public class cardItemKeranjang extends javax.swing.JPanel {
-
+private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(List_Keranjang2.class.getName());    
+    private SwingWorker<ImageIcon, Void> imageLoader;
     public cardItemKeranjang(CartItem item) {
         initComponents();
         
@@ -16,14 +24,15 @@ public class cardItemKeranjang extends javax.swing.JPanel {
         // Menampilkan Total per item (misal: 15.000 x 2 = 30.000)
         lblTotal.setText("Total: Rp " + item.getTotalPrice());
         
-        // 2. Set Gambar
-        try {
-            if (item.getProduct().getFoto() != null) {
-               ImageIcon icon = new ImageIcon(item.getProduct().getFoto());
-               Image img = icon.getImage().getScaledInstance(100, 60, Image.SCALE_SMOOTH); // Sesuaikan ukuran
-               lblGambar.setIcon(new ImageIcon(img));
-            }
-        } catch (Exception e) {}
+       String imagePath = item.getProduct().getFoto();
+
+        if (imagePath != null && !imagePath.isEmpty()) {
+            lblGambar.setText("Loading...");
+            loadImage(imagePath); // proses gambar secara asynchronous
+        } else {
+            lblGambar.setIcon(null);
+            lblGambar.setText("No Image");
+        }
         
         java.awt.Dimension cardSize = new java.awt.Dimension(230, 90); 
         
@@ -33,7 +42,81 @@ public class cardItemKeranjang extends javax.swing.JPanel {
     }
     
     // ... generated code ...
+private void loadImage(final String path) {
+        
+        if (imageLoader != null && !imageLoader.isDone()) {
+            imageLoader.cancel(true);
+        }
 
+        imageLoader = new SwingWorker<ImageIcon, Void>() {
+            @Override
+            protected ImageIcon doInBackground() throws Exception {
+                Image img = null;
+                
+                if (path.startsWith("http://") || path.startsWith("https://")) {
+                    try {
+                        URL url = new URL(path);
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                        connection.setConnectTimeout(5000);
+                        connection.setReadTimeout(5000);
+                        connection.connect();
+                        
+                        if (connection.getResponseCode() == 200) {
+                            try (java.io.InputStream input = connection.getInputStream()) {
+                                img = ImageIO.read(input);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Gagal download URL: " + e.getMessage());
+                    }
+                }
+                
+                else {
+                    try {
+                        File f = new File(path.trim().replace("\\\\", "\\"));
+                        if (f.exists()) {
+                            img = ImageIO.read(f);
+                        } else {
+                            System.err.println("File lokal tidak ditemukan: " + path);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Gagal baca file lokal: " + e.getMessage());
+                    }
+                }
+                
+                if (img != null) {
+                    int width = lblGambar.getWidth();
+                    int height = lblGambar.getHeight();
+                    if (width == 0) width = 100;
+                    if (height == 0) height = 60;
+                    Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                    return new ImageIcon(scaledImg);
+                }
+                
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    ImageIcon finalIcon = get();
+                    if (finalIcon != null) {
+                        lblGambar.setIcon(finalIcon);
+                        lblGambar.setText("");
+                    } else {
+                        lblGambar.setIcon(null);
+                        lblGambar.setText("Fail Load");
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.SEVERE, "Gagal memuat gambar: " + path, ex);
+                    lblGambar.setIcon(null);
+                    lblGambar.setText("Error");
+                }
+            }
+        };
+        imageLoader.execute();
+    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
